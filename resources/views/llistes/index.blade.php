@@ -6,7 +6,7 @@
 
 <div class="container py-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="h4 mb-0">Les meves llistes són molt boniques</h1>
+        <h1 class="h4 mb-0">Les meves llistes són molt boniques i xules</h1>
 
         <div class="d-flex align-items-center gap-3">
             <span class="text-secondary">👤 {{ Auth::user()->name }}</span>
