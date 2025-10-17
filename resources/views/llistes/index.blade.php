@@ -1,18 +1,20 @@
-<x-app-layout>
-    <x-slot name="header">
-        <div class="flex items-center justify-between">
-            <h2 class="font-semibold text-xl text-gray-800">Les meves llistes</h2>
+@extends('layouts.master')
 
-            <div class="flex items-center gap-3">
-                <span class="hidden sm:inline text-gray-600">👤 {{ Auth::user()->name }}</span>
-                <a href="#"
-                    class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
-                    +
-                </a>
-            </div>
+@section('title', 'Les meves llistes')
+
+@section('content')
+
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h4 mb-0">Les meves llistes</h1>
+
+        <div class="d-flex align-items-center gap-3">
+            <span class="text-secondary">👤 {{ Auth::user()->name }}</span>
+            <a href="#" class="btn btn-primary">+</a>
         </div>
-    </x-slot>
-
-
     </div>
-</x-app-layout>
+
+    {{-- Aquí després vindrà el llistat de llistes --}}
+</div>
+
+@endsection
