@@ -49,10 +49,6 @@
         @endforeach
     </div>
 
-    <!-- {{-- PAGINACIÓ --}}
-    <div class="d-flex justify-content-center mt-4">
-        {{ $llistes->links('pagination::bootstrap-4') }}
-    </div> -->
 
     {{-- ESTILS ADDICIONALS (HOVER, ETC.) --}}
     <style>
