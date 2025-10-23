@@ -1,11 +1,13 @@
 <?php
 
+use App\Http\Controllers\AdminController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 use Laravel\Socialite\Facades\Socialite;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\LlistaController;
+use App\Http\Middleware\AdminMiddleware;
 
 Route::get('/', function () {
     return view('welcome');
@@ -45,4 +47,10 @@ Route::middleware('auth')->group(function () {
 // Pàgina principal (llistes)
 Route::get('/llistes', [LlistaController::class, 'index'])->name('llistes.index');
 
+
+// VISTES ADMIN
+// Pàgina d'inici per l'administrador 
+    Route::middleware([AdminMiddleware::class])->group(function () {
+        Route::get('/admin', [AdminController::class, 'index']);
+    });
 require __DIR__.'/auth.php';
