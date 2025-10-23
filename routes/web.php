@@ -5,7 +5,6 @@ use Illuminate\Support\Facades\Route;
 use Laravel\Socialite\Facades\Socialite;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
-use App\Http\Controllers\LlistaController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -42,7 +41,8 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-// Pàgina principal (llistes)
-Route::get('/llistes', [LlistaController::class, 'index'])->name('llistes.index');
+// Rutes de llistes (totes les accions: index, create, show, edit, etc.)
+Route::resource('llistes', App\Http\Controllers\LlistaController::class);
+
 
 require __DIR__.'/auth.php';
