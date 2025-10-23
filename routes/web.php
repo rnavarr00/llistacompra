@@ -47,11 +47,17 @@ Route::middleware('auth')->group(function () {
 // Rutes de llistes (totes les accions: index, create, show, edit, etc.)
 Route::resource('llistes', App\Http\Controllers\LlistaController::class);
 
+// 1. Ruta para mostrar el formulario (GET)
+Route::get('/llistes/crear', [LlistaController::class, 'create'])->name('llistes.create');
+
+// 2. Ruta para procesar y guardar el formulario (POST)
+Route::post('/llistes', [LlistaController::class, 'store'])->name('llistes.store');
 
 
 // VISTES ADMIN
 // Pàgina d'inici per l'administrador 
-    Route::middleware([AdminMiddleware::class])->group(function () {
+Route::middleware([AdminMiddleware::class])->group(function () {
         Route::get('/admin', [AdminController::class, 'index']);
     });
+
 require __DIR__.'/auth.php';
