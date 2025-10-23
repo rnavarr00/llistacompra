@@ -13,8 +13,15 @@ class LlistaController extends Controller
     // Mostrar todas las listas que tenga el usuario logueado
     public function index()
     {
-        return view('llistes.index');
+        $llistes = collect([
+            (object)['id' => 1, 'nom' => 'Compra setmanal', 'icona' => 'bi-cart'],
+            (object)['id' => 2, 'nom' => 'Sopar de Nadal', 'icona' => 'bi-gift'],
+            (object)['id' => 3, 'nom' => 'Coses per la platja', 'icona' => 'bi-sun'],
+        ]);
+
+        return view('llistes.index', compact('llistes'));
     }
+
 
     /**
      * Show the form for creating a new resource.
