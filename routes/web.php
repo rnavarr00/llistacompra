@@ -44,8 +44,9 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-// Pàgina principal (llistes)
-Route::get('/llistes', [LlistaController::class, 'index'])->name('llistes.index');
+// Rutes de llistes (totes les accions: index, create, show, edit, etc.)
+Route::resource('llistes', App\Http\Controllers\LlistaController::class);
+
 
 
 // VISTES ADMIN
