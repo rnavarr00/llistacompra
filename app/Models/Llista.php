@@ -6,14 +6,6 @@ use Illuminate\Database\Eloquent\Model;
 
 class Llista extends Model
 {
-    protected $table = 'llistes';
-    
-    protected $fillable = [
-        'nom',
-        'usuari_id',
-        'productes_llistes'
-    ];
-
     public function creador()
     {
         return $this->belongsTo(User::class, 'usuari_id');

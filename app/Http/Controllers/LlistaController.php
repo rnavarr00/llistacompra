@@ -15,12 +15,13 @@ class LlistaController extends Controller
     // Mostrar todas las listas que tenga el usuario logueado
     public function index()
     {
-        $llistes = collect([
-            (object)['id' => 1, 'nom' => 'Compra setmanal', 'icona' => 'bi-cart'],
-            (object)['id' => 2, 'nom' => 'Sopar de Nadal', 'icona' => 'bi-gift'],
-            (object)['id' => 3, 'nom' => 'Coses per la platja', 'icona' => 'bi-sun'],
-        ]);
+        $user = Auth::user();
 
+        // Només les llistes creades per l’usuari loguejat
+        $llistes = Llista::where('usuari_id', $user->id)
+            ->orderBy('created_at', 'desc')
+            ->get();
+            
         return view('llistes.index', compact('llistes'));
     }
 
@@ -42,7 +43,7 @@ class LlistaController extends Controller
     {
         // Confirmem que el nom de la llista sigui valid
         $validatedData = $request->validate([
-            'nom' => 'required|string|max:255|unique:llistes,nom', 
+            'nom' => 'required|string|max:255|unique:llistes,nom',
         ], [
             // Mensaje personalizado para la regla unique (opcional)
             'nom.unique' => 'Ja existeix una llista amb aquest nom.',

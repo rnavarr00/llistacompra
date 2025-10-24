@@ -16,7 +16,7 @@ Route::get('/', function () {
 Route::get('/google-auth/redirect', function () {
     return Socialite::driver('google')->redirect();
 });
- 
+
 Route::get('/google-auth/callback', function () {
     $user_google = Socialite::driver('google')->user();
 
@@ -30,7 +30,6 @@ Route::get('/google-auth/callback', function () {
     Auth::login($user, true);
 
     return redirect()->route('llistes.index');
-
 });
 
 Route::get('/dashboard', function () {
@@ -42,10 +41,12 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    // Rutes de llistes (totes les accions: index, create, show, edit, etc.)
+    Route::resource('llistes', App\Http\Controllers\LlistaController::class);
 });
 
-// Rutes de llistes (totes les accions: index, create, show, edit, etc.)
-Route::resource('llistes', App\Http\Controllers\LlistaController::class);
+
 
 // 1. Ruta para mostrar el formulario (GET)
 Route::get('/llistes/crear', [LlistaController::class, 'create'])->name('llistes.create');
@@ -57,7 +58,7 @@ Route::post('/llistes', [LlistaController::class, 'store'])->name('llistes.store
 // VISTES ADMIN
 // Pàgina d'inici per l'administrador 
 Route::middleware([AdminMiddleware::class])->group(function () {
-        Route::get('/admin', [AdminController::class, 'index']);
-    });
+    Route::get('/admin', [AdminController::class, 'index']);
+});
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';
