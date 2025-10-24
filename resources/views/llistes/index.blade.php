@@ -4,19 +4,17 @@
 
 <div class="container">
 
-    {{-- TÍTOL PRINCIPAL --}}
-    <h1 class="text-center my-5">Les meves llistes</h1>
+    {{-- ENCAPÇALAMENT AMB BOTÓ DE CREAR LLISTA --}}
+    <div class="d-flex justify-content-between align-items-center my-4">
+        <h2 class="fw-bold text-primary mb-0 fs-3">
+            <i class="bi bi-list-check me-2 fs-3"></i> Les meves llistes
+        </h2>
 
-    {{-- BOTÓ DE NOVA LLISTA --}}
-    <div class="d-flex justify-content-end mb-4">
         <a href="{{ route('llistes.create') }}"
-            class="btn btn-primary btn-lg px-4 py-2 shadow-sm fw-semibold d-flex align-items-center gap-2">
-            <i class="bi bi-plus-lg fs-5"></i>
-            +
+            class="btn btn-primary btn-lg px-4 d-flex align-items-center justify-content-center shadow-sm">
+            <i class="bi bi-plus-lg fs-3"></i>
         </a>
     </div>
-
-
 
     {{-- GRAELLA DE LLISTES --}}
     <div class="row g-4">
@@ -32,9 +30,9 @@
                         <i class="bi bi-three-dots-vertical"></i>
                     </button>
                     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="menu{{ $llista->id }}">
-                        <li><a class="dropdown-item" href="{{ route('llistes.edit', $llista->id) }}">✏️ Editar</a></li>
-                        <li><a class="dropdown-item text-danger" href="#">❌ Eliminar</a></li>
-                        <li><a class="dropdown-item" href="#">🤝 Compartir</a></li>
+                        <li><a class="dropdown-item" href="{{ route('llistes.edit', $llista->id) }}">Editar</a></li>
+                        <li><a class="dropdown-item text-danger" href="#">Eliminar</a></li>
+                        <li><a class="dropdown-item" href="#">Compartir</a></li>
                     </ul>
                 </div>
 
@@ -54,9 +52,6 @@
         {{-- ESTAT BUIT: cap llista creada --}}
         <div class="col-12 text-center mt-5">
             <p class="text-muted">Encara no tens cap llista creada.</p>
-            <a href="{{ route('llistes.create') }}" class="btn btn-outline-primary">
-                + Crea la teva primera llista
-            </a>
         </div>
         @endforelse
 
