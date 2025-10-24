@@ -22,6 +22,7 @@
         @forelse ($llistes as $llista)
         <div class="col-12 col-sm-6 col-md-4">
             <div class="card h-100 text-center shadow-sm border-0 position-relative list-card"
+                onclick="window.location=`{{ route('llistes.show', $llista->id) }}`"
                 style="cursor:pointer; transition:box-shadow 0.2s ease-in-out;">
 
                 {{-- MENÚ DE TRES PUNTETS --}}
@@ -65,5 +66,17 @@
             box-shadow: 0 0 20px rgba(0, 0, 0, 0.15) !important;
         }
     </style>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Evita que els clics dins del menú de tres puntets obrin el show
+            document.querySelectorAll('.dropdown, .dropdown-item, .btn').forEach(el => {
+                el.addEventListener('click', function(event) {
+                    event.stopPropagation();
+                });
+            });
+        });
+    </script>
+
 
     @endsection
