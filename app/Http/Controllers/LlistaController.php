@@ -50,7 +50,7 @@ class LlistaController extends Controller
 
         // 3. CREACIÓN Y GUARDADO EN LA BASE DE DATOS
         // Se utiliza el modelo Llista para crear un nuevo registro.
-        $list = Llista::create([
+        $llista = Llista::create([
             'nom'       => $validatedData['nom'], // Asigna el dato validado (el nombre de la lista) a la columna 'nom'.
             'usuari_id' => Auth::id(),             // Asigna el ID del usuario actualmente autenticado a la columna 'usuari_id'.
         ]);
@@ -60,7 +60,7 @@ class LlistaController extends Controller
         return redirect()->route('llistes.index') 
                         // 'with' adjunta una variable de sesión temporal (flash) que se usa para mostrar 
                         // un mensaje de éxito en la siguiente página.
-                        ->with('success', '✅ Llista "' . $list->nom . '" creada amb èxit!');
+                        ->with('success', '✅ Llista "' . $llista->nom . '" creada amb èxit!');
     }
 
     /**
