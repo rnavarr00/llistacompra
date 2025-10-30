@@ -2,71 +2,28 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Llista;
 use Illuminate\Http\Request;
 use App\Models\Producte;
 
 class ProducteController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-
-    // Dentro de una lista, mostrar todos los productos que hay en ella
-    public function index()
+    public function toggle($llista_id, $producte_id)
     {
-        //
-    }
+        // Buscar la llista i el producte dins la relació
+        $llista = Llista::findOrFail($llista_id);
+        $producte = $llista->productes()->where('producte_id', $producte_id)->firstOrFail();
 
-    /**
-     * Show the form for creating a new resource.
-     */
+        // Canviar l’estat de "comprat" (si era true, passa a false i viceversa)
+        $nouEstat = !$producte->pivot->comprat;
 
-    // Crear un producto, su categoría será -> SIN CATEGORÍA
-    public function create()
-    {
-        //
-    }
+        // Actualitzar el valor a la taula pivot
+        $llista->productes()->updateExistingPivot($producte_id, [
+            'comprat' => $nouEstat
+        ]);
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        //
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-
-    // Eliminar un producto de la lista seleccionada
-    public function destroy(string $id)
-    {
-        //
+        // Tornar enrere per mostrar els canvis
+        return back();
     }
 
     public function search(Request $request)
