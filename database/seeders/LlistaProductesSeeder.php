@@ -10,6 +10,7 @@ class LlistaProductesSeeder extends Seeder
 {
     public function run(): void
     {
+
         // 🔹 Crea una llista de prova
         $llista = Llista::create([
             'nom' => 'Compra setmanal',
