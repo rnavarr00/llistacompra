@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Models\Producte;
 
 class ProducteController extends Controller
 {
@@ -66,5 +67,26 @@ class ProducteController extends Controller
     public function destroy(string $id)
     {
         //
+    }
+
+    public function search(Request $request)
+    {
+        $q = $request->query('q', '');
+        // Borrem els espais i limitem el número de caràcters
+        $q = trim(substr($q, 0, 100)); 
+
+        // Si l'usuari no escriu res, no recomanem cap producte
+        if ($q === '') {
+            return response()->json([]);
+        }
+
+        // Busquem per l'inici de paraula (case-insensitive)
+        $products = Producte::query()
+            ->where('nom', 'like', $q . '%')
+            ->orderBy('nom')
+            ->limit(10)
+            ->get(['id', 'nom']);
+
+        return response()->json($products);
     }
 }

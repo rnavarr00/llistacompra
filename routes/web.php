@@ -7,6 +7,7 @@ use Laravel\Socialite\Facades\Socialite;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\LlistaController;
+use App\Http\Controllers\ProducteController;
 use App\Http\Middleware\AdminMiddleware;
 
 Route::get('/', function () {
@@ -44,6 +45,10 @@ Route::middleware('auth')->group(function () {
 
     // Rutes de llistes (totes les accions: index, create, show, edit, etc.)
     Route::resource('llistes', App\Http\Controllers\LlistaController::class);
+
+    // Ruta que retorna un json amb els productes que coincideixen, l'usuari no hauria d'accedir
+    // aquí, només és una ruta que retornarem al CREATE en format json.
+    Route::get('/productes/search', [ProducteController::class, 'search'])->name('productes.search');
 });
 
 

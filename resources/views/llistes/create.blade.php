@@ -28,12 +28,15 @@
                 <div class="row">
                     <div class="col-md-6 position-relative">
                         <!-- Què veu l'usuari -->
-                        <input type="text" 
+                        <input 
+                            type="text" 
                             class="form-control" 
                             id="nomProducte" 
                             name="producte_input" 
                             placeholder="Introdueix el producte"
-                            autocomplete="off">
+                            autocomplete="off"
+                            data-search-url="{{ route('productes.search') }}"
+                        >
                         
                         <!-- Aquest camp no es veu, ens serveix per enviar el producte amb l'id a la BD -->
                         <input type="hidden" name="producte_id" id="producte_id">
@@ -54,32 +57,65 @@
 
     {{-- Script que ens ajudarà a autocompletar el que l'usuari escrigui al producte --}}
     <script>
-        // Agafem el valor que l'usuari escriu a nomProducte 
-        const producteInput = document.getElementById('nomProducte');
+    document.addEventListener('DOMContentLoaded', () => {
+        const input = document.getElementById('nomProducte');
         const suggestions = document.getElementById('suggestions');
+        const hiddenInput = document.getElementById('producte_id');
 
-        producteInput.addEventListener('input', function() {
-            const query = this.value.trim(); 
+        const searchUrl = input.dataset.searchUrl;
+        let timeout = null; // para controlar el "debounce"
 
-            // Netejem el que hi havia abans
+        input.addEventListener('input', function() {
+            const query = this.value.trim();
+            hiddenInput.value = ''; // limpiamos el id si el texto cambia
             suggestions.innerHTML = '';
 
-            // En cas que no hagin escrit res, no sortirà cap suggerència
-            if (query.length === 0) {
-                return; 
-            }
+            // Si no hay texto, no buscamos
+            if (query.length === 0) return;
 
-            // Aquí pondremos las sugerencias filtradas más adelante
-            // Por ahora, solo mostramos algo fijo como prueba
-            const dummyProducts = ['Manzana', 'Mandarina', 'Mango'];
-            const matches = dummyProducts.filter(p => p.toLowerCase().startsWith(query.toLowerCase()));
+            // Cancelar cualquier búsqueda anterior y esperar un poco (debounce)
+            clearTimeout(timeout);
+            timeout = setTimeout(() => {
+                fetch(`${searchUrl}?q=${encodeURIComponent(query)}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        suggestions.innerHTML = ''; // limpiar anteriores
+                        data.forEach(product => {
+                            const item = document.createElement('button');
+                            item.type = 'button';
+                            item.classList.add('list-group-item', 'list-group-item-action');
+                            item.textContent = product.nom;
 
-            matches.forEach(product => {
-                const item = document.createElement('div');
-                item.classList.add('list-group-item', 'list-group-item-action');
-                item.textContent = product;
-                suggestions.appendChild(item);
-            });
+                            // Al hacer clic, rellenamos el input visible y oculto
+                            item.addEventListener('click', () => {
+                                input.value = product.nom;
+                                hiddenInput.value = product.id;
+                                suggestions.innerHTML = '';
+                            });
+
+                            suggestions.appendChild(item);
+                        });
+
+                        if (data.length === 0) {
+                            const noResult = document.createElement('div');
+                            noResult.classList.add('list-group-item', 'text-muted');
+                            noResult.textContent = 'Sense resultats';
+                            suggestions.appendChild(noResult);
+                        }
+                    })
+                    .catch(err => {
+                        console.error('Error al buscar productes:', err);
+                    });
+            }, 300); // espera 300ms después de que el usuario deje de escribir
         });
+
+        // Ocultar las sugerencias si se hace clic fuera
+        document.addEventListener('click', (e) => {
+            if (!suggestions.contains(e.target) && e.target !== input) {
+                suggestions.innerHTML = '';
+            }
+        });
+    });
     </script>
+
 @endsection
