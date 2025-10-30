@@ -58,81 +58,120 @@
                             required>
                     </div>
                 </div>
-
+                <div id="productesContainer">
+                </div>
             </div>
 
-            
-            <button type="submit" class="btn btn-success mt-3"> <!-- Separación encima del botón -->
-                <i class="bi bi-save"></i> Guardar llista
-            </button>
+            <div class="mb-2">
+                <button type="button" class="btn btn-primary d-block" id="afegirProducte">
+                    <i class="bi bi-plus-circle"></i> Afegir producte
+                </button>
+            </div>
+
+            <div id="llistaVisual" class="mt-3 mb-3">
+                <h5>Productes afegits:</h5>
+                <ul class="list-group" id="productesList"></ul>
+            </div>
+
+            <div class="mb-2">
+                <button type="submit" class="btn btn-success d-block">
+                    <i class="bi bi-save"></i> Guardar llista
+                </button>
+            </div>
         </form>
     </div>
 
     {{-- Script que ens ajudarà a autocompletar el que l'usuari escrigui al producte --}}
     <script>
     document.addEventListener('DOMContentLoaded', () => {
-        // El que escriu l'usuari
+        // --- Autocompletado ---
         const input = document.getElementById('nomProducte');
-        // El que sugereix el buscador
         const suggestions = document.getElementById('suggestions');
-        // El que escriu l'usuari, es transforma en id (el del producte)
         const hiddenInput = document.getElementById('producte_id');
-
         const searchUrl = input.dataset.searchUrl;
-        // Evitem mostrar productes si l'usuari encara està escrivint
-        let timeout = null; 
+        let timeout = null;
 
         input.addEventListener('input', function() {
-            const query = this.value.trim(); // Borrem espais abans i després
-            hiddenInput.value = ''; // Netejem id si el text canvia
-            suggestions.innerHTML = ''; //Eliminem les sugerències
+            const query = this.value.trim();
+            hiddenInput.value = '';
+            suggestions.innerHTML = '';
 
-            // Si no hi ha text, no busca res
             if (query.length === 0) return;
 
             clearTimeout(timeout);
             timeout = setTimeout(() => {
-                // Amb encodeURI fem que caràcters especials no corrompin la búsqueda
                 fetch(`${searchUrl}?q=${encodeURIComponent(query)}`)
-                    .then(response => response.json())
+                    .then(res => res.json())
                     .then(data => {
-                        suggestions.innerHTML = ''; // Netejar anteriors sugerències
+                        suggestions.innerHTML = '';
                         data.forEach(product => {
                             const item = document.createElement('button');
                             item.type = 'button';
                             item.classList.add('list-group-item', 'list-group-item-action');
                             item.textContent = product.nom;
-
-                            // Al fer click en el producte, omplim l'input visible i el que no veiem (id)
                             item.addEventListener('click', () => {
                                 input.value = product.nom;
                                 hiddenInput.value = product.id;
                                 suggestions.innerHTML = '';
                             });
-
                             suggestions.appendChild(item);
                         });
-
-                        if (data.length === 0) {
-                            const noResult = document.createElement('div');
-                            noResult.classList.add('list-group-item', 'text-muted');
-                            noResult.textContent = 'Sense resultats';
-                            suggestions.appendChild(noResult);
-                        }
-                    })
-                    .catch(err => {
-                        console.error('Error al buscar productes:', err);
                     });
-            }, 300); // espera 300ms després de que l'usuari deixi d'escriure abans de buscar
+            }, 300);
         });
 
-        // Deixem d'ensenyar les sugerències si l'usuari fa click fora del requadre
         document.addEventListener('click', (e) => {
             if (!suggestions.contains(e.target) && e.target !== input) {
                 suggestions.innerHTML = '';
             }
         });
+
+        // --- Botón Afegir producte ---
+        let productIndex = 0;
+        const productesContainer = document.getElementById('productesContainer');
+        const productesList = document.getElementById('productesList');
+        const afegirBtn = document.getElementById('afegirProducte');
+
+        afegirBtn.addEventListener('click', function() {
+            const producteId = hiddenInput.value;
+            const producteName = input.value.trim();
+            const quantitat = document.getElementById('quantitat').value;
+
+            if (!producteId || !producteName || !quantitat) {
+                alert('Selecciona un producte i indica una quantitat vàlida.');
+                return;
+            }
+
+            // Inputs ocultos
+            const inputId = document.createElement('input');
+            inputId.type = 'hidden';
+            inputId.name = `productes[${productIndex}][id]`;
+            inputId.value = producteId;
+
+            const inputQuantitat = document.createElement('input');
+            inputQuantitat.type = 'hidden';
+            inputQuantitat.name = `productes[${productIndex}][quantitat]`;
+            inputQuantitat.value = quantitat;
+
+            productesContainer.appendChild(inputId);
+            productesContainer.appendChild(inputQuantitat);
+
+            // Lista visual
+            const li = document.createElement('li');
+            li.classList.add('list-group-item', 'd-flex', 'justify-content-between');
+            li.textContent = `${producteName} — Quantitat: ${quantitat}`;
+            productesList.appendChild(li);
+
+            productIndex++;
+
+            // Limpiar inputs
+            input.value = '';
+            hiddenInput.value = '';
+            document.getElementById('quantitat').value = 1;
+        });
     });
+
+
     </script>
 
 @endsection

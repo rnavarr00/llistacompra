@@ -44,11 +44,14 @@ class LlistaController extends Controller
         // 1️⃣ VALIDACIÓN
         $validatedData = $request->validate([
             'nom' => 'required|string|max:255|unique:llistes,nom',
-            'producte_id' => 'required|exists:productes,id',
-            'quantitat' => 'required|integer|min:1',
+            'productes' => 'required|array',
+            'productes.*.id' => 'required|exists:productes,id',
+            'productes.*.quantitat' => 'required|integer|min:1',
         ], [
             'nom.unique' => 'Ja existeix una llista amb aquest nom.',
+            'productes.required' => 'Has d’afegir almenys un producte.',
         ]);
+
 
         // 2️⃣ CREACIÓN DE LA LISTA
         $llista = Llista::create([
@@ -57,12 +60,14 @@ class LlistaController extends Controller
         ]);
 
         // 3️⃣ ASOCIAR EL PRODUCTO
-        $llista->productes()->syncWithoutDetaching([
-            $validatedData['producte_id'] => [
-                'quantitat' => $validatedData['quantitat'],
-                'comprat' => false
-            ]
-        ]);
+        foreach ($validatedData['productes'] as $producte) {
+            $llista->productes()->syncWithoutDetaching([
+                $producte['id'] => [
+                    'quantitat' => $producte['quantitat'],
+                    'comprat' => false,
+                ]
+            ]);
+        }
 
         // 4️⃣ REDIRECCIÓN
         return redirect()->route('llistes.index')
