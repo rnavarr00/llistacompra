@@ -58,35 +58,39 @@
     {{-- Script que ens ajudarà a autocompletar el que l'usuari escrigui al producte --}}
     <script>
     document.addEventListener('DOMContentLoaded', () => {
+        // El que escriu l'usuari
         const input = document.getElementById('nomProducte');
+        // El que sugereix el buscador
         const suggestions = document.getElementById('suggestions');
+        // El que escriu l'usuari, es transforma en id (el del producte)
         const hiddenInput = document.getElementById('producte_id');
 
         const searchUrl = input.dataset.searchUrl;
-        let timeout = null; // para controlar el "debounce"
+        // Evitem mostrar productes si l'usuari encara està escrivint
+        let timeout = null; 
 
         input.addEventListener('input', function() {
-            const query = this.value.trim();
-            hiddenInput.value = ''; // limpiamos el id si el texto cambia
-            suggestions.innerHTML = '';
+            const query = this.value.trim(); // Borrem espais abans i després
+            hiddenInput.value = ''; // Netejem id si el text canvia
+            suggestions.innerHTML = ''; //Eliminem les sugerències
 
-            // Si no hay texto, no buscamos
+            // Si no hi ha text, no busca res
             if (query.length === 0) return;
 
-            // Cancelar cualquier búsqueda anterior y esperar un poco (debounce)
             clearTimeout(timeout);
             timeout = setTimeout(() => {
+                // Amb encodeURI fem que caràcters especials no corrompin la búsqueda
                 fetch(`${searchUrl}?q=${encodeURIComponent(query)}`)
                     .then(response => response.json())
                     .then(data => {
-                        suggestions.innerHTML = ''; // limpiar anteriores
+                        suggestions.innerHTML = ''; // Netejar anteriors sugerències
                         data.forEach(product => {
                             const item = document.createElement('button');
                             item.type = 'button';
                             item.classList.add('list-group-item', 'list-group-item-action');
                             item.textContent = product.nom;
 
-                            // Al hacer clic, rellenamos el input visible y oculto
+                            // Al fer click en el producte, omplim l'input visible i el que no veiem (id)
                             item.addEventListener('click', () => {
                                 input.value = product.nom;
                                 hiddenInput.value = product.id;
@@ -106,10 +110,10 @@
                     .catch(err => {
                         console.error('Error al buscar productes:', err);
                     });
-            }, 300); // espera 300ms después de que el usuario deje de escribir
+            }, 300); // espera 300ms després de que l'usuari deixi d'escriure abans de buscar
         });
 
-        // Ocultar las sugerencias si se hace clic fuera
+        // Deixem d'ensenyar les sugerències si l'usuari fa click fora del requadre
         document.addEventListener('click', (e) => {
             if (!suggestions.contains(e.target) && e.target !== input) {
                 suggestions.innerHTML = '';
