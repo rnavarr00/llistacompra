@@ -45,6 +45,19 @@
                         <div id="suggestions" class="list-group position-absolute" style="z-index:1000;"></div>
                     </div>
                 </div>
+                <label for="quantitat" class="mb-2 mt-3">Quantitat:</label>
+                <div class="row">
+                    <div class="col-md-3">
+                        <input 
+                            type="number" 
+                            class="form-control" 
+                            id="quantitat" 
+                            name="quantitat" 
+                            placeholder="Ex: 2" 
+                            min="1" 
+                            required>
+                    </div>
+                </div>
 
             </div>
 

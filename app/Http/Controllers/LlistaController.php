@@ -39,30 +39,37 @@ class LlistaController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+   public function store(Request $request)
     {
-        // Confirmem que el nom de la llista sigui valid
+        // 1️⃣ VALIDACIÓN
         $validatedData = $request->validate([
             'nom' => 'required|string|max:255|unique:llistes,nom',
+            'producte_id' => 'required|exists:productes,id',
+            'quantitat' => 'required|integer|min:1',
         ], [
-            // Mensaje personalizado para la regla unique (opcional)
             'nom.unique' => 'Ja existeix una llista amb aquest nom.',
         ]);
 
-        // 3. CREACIÓN Y GUARDADO EN LA BASE DE DATOS
-        // Se utiliza el modelo Llista para crear un nuevo registro.
+        // 2️⃣ CREACIÓN DE LA LISTA
         $llista = Llista::create([
-            'nom'       => $validatedData['nom'], // Asigna el dato validado (el nombre de la lista) a la columna 'nom'.
-            'usuari_id' => Auth::id(),             // Asigna el ID del usuario actualmente autenticado a la columna 'usuari_id'.
+            'nom'       => $validatedData['nom'],
+            'usuari_id' => Auth::id(),
         ]);
 
-        // 4. REDIRECCIÓN Y MENSAJE DE ÉXITO
-        // Redirige al usuario a la página de índice o a la que desees tras la acción exitosa.
+        // 3️⃣ ASOCIAR EL PRODUCTO
+        $llista->productes()->syncWithoutDetaching([
+            $validatedData['producte_id'] => [
+                'quantitat' => $validatedData['quantitat'],
+                'comprat' => false
+            ]
+        ]);
+
+        // 4️⃣ REDIRECCIÓN
         return redirect()->route('llistes.index')
-            // 'with' adjunta una variable de sesión temporal (flash) que se usa para mostrar 
-            // un mensaje de éxito en la siguiente página.
             ->with('success', '✅ Llista "' . $llista->nom . '" creada amb èxit!');
     }
+
+
 
     /**
      * Display the specified resource.
