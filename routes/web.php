@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\LlistaController;
 use App\Http\Controllers\ProducteController;
 use App\Http\Middleware\AdminMiddleware;
-use App\Http\Controllers\ProducteController;
+
 
 Route::get('/', function () {
     return view('welcome');
