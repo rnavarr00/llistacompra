@@ -112,6 +112,9 @@ class LlistaController extends Controller
     // Eliminar una lista
     public function destroy(string $id)
     {
-        //
+        $llista = Llista::findOrFail($id);
+        $llista->delete();
+
+        return redirect()->route('llistes.index')->with('success', 'Llista eliminada correctament');
     }
 }

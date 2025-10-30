@@ -32,7 +32,16 @@
                     </button>
                     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="menu{{ $llista->id }}">
                         <li><a class="dropdown-item" href="{{ route('llistes.edit', $llista->id) }}">Editar</a></li>
-                        <li><a class="dropdown-item text-danger" href="#">Eliminar</a></li>
+                        <li>
+                        <form action="{{ route('llistes.destroy', $llista->id) }}" method="POST" onsubmit="return confirm('Estàs segur que vols eliminar aquesta llista?')">
+                            @csrf
+                            @method('DELETE')
+
+                            <button type="submit" class="dropdown-item text-danger border-0 bg-transparent">
+                                Eliminar
+                            </button>
+                        </form>
+                        </li>
                         <li><a class="dropdown-item" href="#">Compartir</a></li>
                     </ul>
                 </div>

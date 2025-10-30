@@ -170,8 +170,6 @@
             document.getElementById('quantitat').value = 1;
         });
     });
-
-
     </script>
 
 @endsection
