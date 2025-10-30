@@ -8,6 +8,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\LlistaController;
 use App\Http\Middleware\AdminMiddleware;
+use App\Http\Controllers\ProducteController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -58,5 +59,10 @@ Route::middleware([AdminMiddleware::class])->group(function () {
 //Route::get('/llistes/crear', [LlistaController::class, 'create'])->name('llistes.create');
 // 2. Ruta para procesar y guardar el formulario (POST)
 // Route::post('/llistes', [LlistaController::class, 'store'])->name('llistes.store');
+
+Route::patch(
+    '/llistes/{llista_id}/productes/{producte_id}/toggle',
+    [ProducteController::class, 'toggle']
+)->name('productes.toggle')->middleware('auth');
 
 require __DIR__ . '/auth.php';
