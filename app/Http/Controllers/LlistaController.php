@@ -94,7 +94,13 @@ class LlistaController extends Controller
     // Editar el nombre de una lista
     public function edit(string $id)
     {
-        //
+        $llista = Llista::with('productes')->findOrFail($id);
+
+        if ($llista->usuari_id !== Auth::id()) {
+            abort(403, 'No tens permís per editar aquesta llista.');
+        }
+
+        return view('llistes.edit', compact('llista'));
     }
 
     /**
@@ -102,8 +108,39 @@ class LlistaController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        //
+        $llista = Llista::with('productes')->findOrFail($id);
+
+        if ($llista->usuari_id !== Auth::id()) {
+            abort(403, 'No tens permís per modificar aquesta llista.');
+        }
+
+        // Validación directa
+        $validated = $request->validate([
+            'nom' => 'required|string|max:255|unique:llistes,nom,' . $id,
+            'productes' => 'required|array|min:1',
+            'productes.*.id' => 'required|exists:productes,id',
+            'productes.*.quantitat' => 'required|integer|min:1',
+        ], [
+            'nom.required' => 'Has d’introduir un nom per a la llista.',
+            'nom.unique' => 'Ja existeix una llista amb aquest nom.',
+            'productes.required' => 'Has d’afegir almenys un producte.',
+        ]);
+
+        // Actualizar nombre
+        $llista->update([
+            'nom' => $validated['nom'],
+        ]);
+
+        // Sincronizar productos con cantidades
+        $syncData = [];
+        foreach ($validated['productes'] as $producte) {
+            $syncData[$producte['id']] = ['quantitat' => $producte['quantitat']];
+        }
+        $llista->productes()->sync($syncData);
+
+        return redirect()->route('llistes.index')->with('success', 'Llista actualitzada correctament.');
     }
+
 
     /**
      * Remove the specified resource from storage.
