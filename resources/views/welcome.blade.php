@@ -4,42 +4,110 @@
 
 @section('content')
 
-<body class="bg-primary bg-gradient">
+<body 
+    style="
+        background: linear-gradient(135deg, #4f46e5, #06b6d4);
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        padding: 40px 20px;
+    "
+>
 
-    <!-- Botons superior dret -->
-    <!-- <div class="position-absolute top-0 end-0 p-3">
-        @guest
-        <a href="{{ route('login') }}" class="btn btn-outline-light me-2">Inicia sessió</a>
-        <a href="{{ route('register') }}" class="btn btn-light text-primary fw-semibold">Registra’t</a>
-        @else
-        <a href="{{ url('/llistes') }}" class="btn btn-light text-primary fw-semibold">Les meves llistes</a>
-        @endguest
-    </div> -->
+    <div class="container">
 
-    <!-- Contenidor central -->
-    <div class="d-flex justify-content-center align-items-center vh-100">
-        <div class="card shadow-lg p-4 p-md-5 text-center" style="max-width: 650px;">
-            <img src="{{ asset('img.png') }}" alt="LlistApp"
-                style="height: 70px; width: auto; display: block; margin: 0 auto; border-radius: 10px; object-fit: contain;">
-            <br>
-            <p class="mb-3">
-                Aquesta aplicació t’ajuda a <strong>crear, organitzar i compartir llistes</strong> de forma fàcil i ràpida.
-                Pots fer llistes de la compra, tasques o idees, i compartir-les amb els teus amics o companys per col·laborar-hi en temps real.
-            </p>
-            <p class="mb-4">
-                <strong>Comença ara</strong> i descobreix com de fàcil pot ser mantenir-te organitzat i connectat!
-            </p>
+        <div class="row align-items-center">
 
-            @guest
-            <a href="{{ route('register') }}" class="btn btn-primary btn-lg mb-2">
-                <i class="bi bi-person-plus me-2"></i>Crea un compte</a>
-            <a href="{{ route('login') }}" class="btn btn-primary btn-lg">
-                <i class="bi bi-box-arrow-in-right me-2"></i>Ja tinc compte</a>
-            @else
-            <a href="{{ url('/llistes') }}" class="btn btn-primary btn-lg">
-                Accedeix a les teves llistes</a>
-            @endguest
-        </div>
-    </div>
-</body>
-@endsection
+            <!-- TEXT PRINCIPAL -->
+            <div class="col-lg-6 mb-5 mb-lg-0"
+                style="color: white;">
+
+                <h1 class="fw-bold mb-3"
+                    style="font-size: 3rem; line-height: 1.2;">
+                    Organitza la teva vida<br>
+                    amb <span style="color: #ffe066;">ListApp</span>
+                </h1>
+
+                <p class="mb-4"
+                    style="font-size: 1.25rem; max-width: 500px;">
+                    Crea, gestiona i comparteix llistes de manera ràpida, visual i intuïtiva.
+                    Perfecte per a la compra.
+                </p>
+
+                @guest
+                <div class="d-flex flex-column flex-sm-row gap-3">
+
+                    <a href="{{ route('register') }}"
+                        class="btn btn-light btn-lg"
+                        style="
+                            border-radius: 14px;
+                            padding: 12px 28px;
+                            font-size: 1.1rem;
+                            color: #4f46e5;
+                        ">
+                        <i class="bi bi-person-plus me-2"></i>
+                        Crear un compte
+                    </a>
+
+                    <a href="{{ route('login') }}"
+                        class="btn btn-outline-light btn-lg"
+                        style="
+                            border-radius: 14px;
+                            padding: 12px 28px;
+                            font-size: 1.1rem;
+                            background: khaki;
+                            color: blue;
+                            transition: box-shadow .15s ease-in-out;
+                        "
+                        onmouseover="this.style.boxShadow='0 0 10px blue';"
+                        onmouseout="this.style.boxShadow='none';"
+                        >
+                        <i class="bi bi-box-arrow-in-right me-2"></i>
+                        Ja tinc un compte
+                    </a>
+
+                </div>
+
+                @else
+
+                <a href="{{ url('/llistes') }}"
+                    class="btn btn-light btn-lg mt-3"
+                    style="
+                        border-radius: 14px;
+                        padding: 12px 28px;
+                        font-size: 1.1rem;
+                        color: #4f46e5;
+                    ">
+                    Accedeix a les teves llistes
+                </a>
+
+                @endguest
+            </div>
+
+            <!-- IMATGE / TARGETA -->
+            <div class="col-lg-6 d-flex justify-content-center">
+
+                <div class="card shadow-lg"
+                     style="
+                        border-radius: 25px;
+                        overflow: hidden;
+                        width: 100%;
+                        max-width: 420px;
+                        background: rgba(255,255,255,0.9);
+                        backdrop-filter: blur(6px);
+                        border: none;
+                     ">
+
+                    <div style="background: #fff; padding: 40px; text-align: center;">
+
+                        <img src="{{ asset('img.png') }}" 
+                             alt="LlistApp"
+                             style="height: 80px; margin-bottom: 25px;">
+
+                        <h4 class="fw-bold mb-2" style="color:#1a1a2e;">Tot sota control</h4>
+
+                        <p style="color:#444;">
+                            Llistes organitzades, compartides i accessibles des de qualsevol dispositiu.
+                        </p>
+
+                    </d
