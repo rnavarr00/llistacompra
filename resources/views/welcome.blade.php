@@ -1,8 +1,10 @@
 @extends('layouts.welcomeMaster')
 
-@section('title', 'Benvingut a ListaCompra')
+@section('title', 'Benvingut a ListApp')
 
 @section('content')
+
+<link rel="icon" href="{{ asset('img1.png') }}" type="image/png">
 
 <body 
     style="

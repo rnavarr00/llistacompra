@@ -2,6 +2,8 @@
 @section('title', 'Les meves llistes')
 @section('content')
 
+<link rel="icon" href="{{ asset('img1.png') }}" type="image/png">
+
 <div class="container">
 
     {{-- ENCAPÇALAMENT AMB BOTÓ DE CREAR LLISTA --}}
