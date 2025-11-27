@@ -57,7 +57,8 @@ class User extends Authenticatable
      */
     public function llistesCompartides()
     {
-        return $this->belongsToMany(Llista::class, 'usuaris_llistes')
+        return $this->belongsToMany(Llista::class, 'usuaris_llistes', 'usuari_id', 'llista_id')
+                    ->withPivot('rol')
                     ->withTimestamps();
     }
 }

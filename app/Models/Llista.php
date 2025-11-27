@@ -14,14 +14,16 @@ class Llista extends Model
         'productes_llistes'
     ];
 
-    public function creador()
+    public function owner()
     {
         return $this->belongsTo(User::class, 'usuari_id');
     }
 
     public function usuaris()
     {
-        return $this->belongsToMany(User::class, 'usuaris_llistes');
+        return $this->belongsToMany(User::class, 'usuaris_llistes', 'llista_id', 'usuari_id')
+        ->withPivot('rol')
+        ->withTimestamps();
     }
 
     public function productes()

@@ -31,18 +31,42 @@
                         <i class="bi bi-three-dots-vertical"></i>
                     </button>
                     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="menu{{ $llista->id }}">
-                        <li><a class="dropdown-item" href="{{ route('llistes.edit', $llista->id) }}">Editar</a></li>
-                        <li>
-                        <form action="{{ route('llistes.destroy', $llista->id) }}" method="POST" onsubmit="return confirm('Estàs segur que vols eliminar aquesta llista?')">
-                            @csrf
-                            @method('DELETE')
+                        
+                        {{-- OPCIÓ 1: EDITAR --}}
+                        {{-- Només es mostra si l'usuari pot actualitzar (Owner, Admin, Editor) --}}
+                        @can('update', $llista)
+                            <li><a class="dropdown-item" href="{{ route('llistes.edit', $llista->id) }}">Editar</a></li>
+                        @endcan
 
-                            <button type="submit" class="dropdown-item text-danger border-0 bg-transparent">
-                                Eliminar
-                            </button>
-                        </form>
-                        </li>
-                        <li><a class="dropdown-item" href="#">Compartir</a></li>
+                        {{-- OPCIÓ 2: COMPARTIR (NOU) --}}
+                        {{-- Només es mostra si l'usuari pot compartir (Owner, Admin) --}}
+                        @can('share', $llista)
+                            <li>
+                                <a class="dropdown-item" href="{{ route('llistes.share', $llista->id) }}">
+                                    <i class="bi bi-share-fill me-2"></i> Compartir
+                                </a>
+                            </li>
+                        @endcan
+
+                        {{-- Separador si hi ha accions per sobre (opcional, però net) --}}
+                        @if(Gate::check('update', $llista) || Gate::check('share', $llista))
+                            <li><hr class="dropdown-divider"></li>
+                        @endif
+
+                        {{-- OPCIÓ 3: ELIMINAR --}}
+                        {{-- Només es mostra si l'usuari pot eliminar (Només Owner) --}}
+                        @can('delete', $llista)
+                            <li>
+                            <form action="{{ route('llistes.destroy', $llista->id) }}" method="POST" onsubmit="return confirm('Estàs segur que vols eliminar aquesta llista?')">
+                                @csrf
+                                @method('DELETE')
+
+                                <button type="submit" class="dropdown-item text-danger border-0 bg-transparent">
+                                    <i class="bi bi-trash-fill me-2"></i> Eliminar
+                                </button>
+                            </form>
+                            </li>
+                        @endcan
                     </ul>
                 </div>
 

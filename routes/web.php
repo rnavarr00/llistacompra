@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Route;
 use Laravel\Socialite\Facades\Socialite;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
-use App\Http\Controllers\LlistaController;
+use App\Http\Controllers\LlistaController; // Ja importada
 use App\Http\Controllers\ProducteController;
 use App\Http\Middleware\AdminMiddleware;
 
@@ -45,7 +45,17 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     // Rutes de llistes (totes les accions: index, create, show, edit, etc.)
-    Route::resource('llistes', App\Http\Controllers\LlistaController::class);
+    // RECOMANACIÓ: Utilitzem LlistaController::class directament
+    Route::resource('llistes', LlistaController::class);
+
+    // RUTES DE COMPARTICIÓ DE LLISTES (NOU)
+    // 1. Ruta per mostrar el formulari de compartició (GET)
+    Route::get('llistes/{id}/share', [LlistaController::class, 'share'])
+        ->name('llistes.share');
+
+    // 2. Ruta per processar els canvis de compartició (POST)
+    Route::post('llistes/{id}/share', [LlistaController::class, 'processShare'])
+        ->name('llistes.processShare');
 
     // Ruta que retorna un json amb els productes que coincideixen, l'usuari no hauria d'accedir
     // aquí, només és una ruta que retornarem al CREATE en format json.
@@ -60,10 +70,7 @@ Route::middleware([AdminMiddleware::class])->group(function () {
 });
 
 
-// 1. Ruta para mostrar el formulario (GET)
-//Route::get('/llistes/crear', [LlistaController::class, 'create'])->name('llistes.create');
-// 2. Ruta para procesar y guardar el formulario (POST)
-// Route::post('/llistes', [LlistaController::class, 'store'])->name('llistes.store');
+// Les rutes comentades han estat substituïdes pel Route::resource
 
 Route::patch(
     '/llistes/{llista_id}/productes/{producte_id}/toggle',
