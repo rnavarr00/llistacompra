@@ -22,7 +22,7 @@ class LlistaController extends Controller
         // 1. UTILITZEM LA RELACIÓ llistesCreades() del model User (1:N)
         // Podríem usar $user->llistesCreades, però la query simple és igual de ràpida.
         return Llista::where('usuari_id', $user->id)
-                     ->get();
+            ->get();
     }
 
     /**
@@ -38,7 +38,7 @@ class LlistaController extends Controller
 
         // 2. RETORNAR ELS OBJECTES LLISTA
         return Llista::whereIn('id', $llistes_compartides_ids)
-                     ->get();
+            ->get();
     }
 
     /**
@@ -78,9 +78,9 @@ class LlistaController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-   public function store(Request $request)
+    public function store(Request $request)
     {
-        // 1️⃣ VALIDACIÓN
+        // VALIDACIÓN
         $validatedData = $request->validate([
             'nom' => 'required|string|max:255|unique:llistes,nom',
             'productes' => 'required|array',
@@ -92,13 +92,13 @@ class LlistaController extends Controller
         ]);
 
 
-        // 2️⃣ CREACIÓN DE LA LISTA
+        // CREACIÓN DE LA LISTA
         $llista = Llista::create([
             'nom'       => $validatedData['nom'],
             'usuari_id' => Auth::id(),
         ]);
 
-        // 3️⃣ ASOCIAR EL PRODUCTO
+        // ASOCIAR EL PRODUCTO
         $syncData = [];
         foreach ($validatedData['productes'] as $producte) {
             // Construïm l'array de dades pivot.
@@ -109,10 +109,10 @@ class LlistaController extends Controller
         }
 
         // Utilitzem sync() per a una associació inicial més neta
-        $llista->productes()->sync($syncData); 
+        $llista->productes()->sync($syncData);
 
 
-        // 4️⃣ REDIRECCIÓ
+        // REDIRECCIÓ
         return redirect()->route('llistes.index')
             ->with('success', '✅ Llista "' . $llista->nom . '" creada amb èxit!');
     }
@@ -127,7 +127,7 @@ class LlistaController extends Controller
         // 1. RECUPERACIÓ DEL MODEL
         // Busquem la llista, llançant 404 si no existeix.
         $llista = Llista::findOrFail($id);
-        
+
         // 2. AUTORITZACIÓ EXPLÍCITA
         // Crida LlistaPolicy::view(). Això comprova:
         // a) Si és l'Owner (via before()).
@@ -135,9 +135,23 @@ class LlistaController extends Controller
         $this->authorize('view', $llista);
 
         // Si la comprovació passa:
-        $llista->load('productes'); 
+        $llista->load('productes.categoria');
 
-        return view('llistes.show', compact('llista'));
+        // Agrupar productes per categoria
+        $productesPerCategoria = $llista->productes->groupBy(function ($producte) {
+            return $producte->categoria->nom ?? 'Sense categoria';
+        });
+
+        // Convertim a array i el partim en dues columnes
+        $categoriesArray = $productesPerCategoria->toArray();
+        $midpoint = ceil(count($categoriesArray) / 2);
+
+        $columna1 = array_slice($categoriesArray, 0, $midpoint, true);
+        $columna2 = array_slice($categoriesArray, $midpoint, null, true);
+
+        $hasTwoColumns = count($columna2) > 0;
+
+        return view('llistes.show', compact('llista', 'columna1', 'columna2', 'hasTwoColumns'));
     }
 
 
@@ -150,11 +164,11 @@ class LlistaController extends Controller
     {
         // 1. RECUPERACIÓ DEL MODEL
         $llista = Llista::with('productes')->findOrFail($id);
-        
+
         // 2. AUTORITZACIÓ EXPLÍCITA: Crida LlistaPolicy::update()
         // La Policy decidirà si l'usuari té el rol 'editor', 'admin' o si és l'owner.
-        $this->authorize('update', $llista); 
-        
+        $this->authorize('update', $llista);
+
         return view('llistes.edit', compact('llista'));
     }
 
@@ -164,9 +178,9 @@ class LlistaController extends Controller
     public function update(Request $request, string $id)
     {
         $llista = Llista::with('productes')->findOrFail($id);
-    
+
         // 1. AUTORITZACIÓ EXPLÍCITA: Crida LlistaPolicy::update()
-        $this->authorize('update', $llista); 
+        $this->authorize('update', $llista);
 
         // 2. Validació (mantinguda del vostre codi original)
         $validated = $request->validate([
@@ -206,7 +220,7 @@ class LlistaController extends Controller
     {
         // 1. RECUPERACIÓ DEL MODEL
         $llista = Llista::findOrFail($id);
-        
+
         // 2. AUTORITZACIÓ EXPLÍCITA: Crida LlistaPolicy::delete()
         // Si l'usuari no és l'owner (que és qui la Policy permet), 
         // Laravel llançarà un 403 Forbidden.
@@ -219,8 +233,8 @@ class LlistaController extends Controller
     }
 
     /**
-    * Mostra el formulari per gestionar els permisos de compartició d'una llista.
-    */
+     * Mostra el formulari per gestionar els permisos de compartició d'una llista.
+     */
     public function share(string $id)
     {
         // 1. RECUPERACIÓ DEL MODEL
@@ -239,13 +253,13 @@ class LlistaController extends Controller
     }
 
     /**
-    * Processa la lògica d'afegir, modificar o eliminar permisos de compartició.
-    */
+     * Processa la lògica d'afegir, modificar o eliminar permisos de compartició.
+     */
     public function processShare(Request $request, string $id)
     {
         // 1. RECUPERACIÓ DEL MODEL
         $llista = Llista::findOrFail($id);
-        
+
         // 2. AUTORITZACIÓ EXPLÍCITA: Crida LlistaPolicy::share()
         // Requerit abans de qualsevol modificació de permisos.
         $this->authorize('share', $llista);
@@ -253,8 +267,8 @@ class LlistaController extends Controller
         // 3. VALIDACIÓ
         $validated = $request->validate([
             // Pot ser un array buit si s'eliminen tots els usuaris
-            'usuaris' => 'nullable|array', 
-            
+            'usuaris' => 'nullable|array',
+
             // Cada element de l'array 'usuaris' ha de ser un ID vàlid d'usuari
             // que no sigui l'Owner, amb un rol vàlid.
             'usuaris.*.id' => 'required|exists:users,id|not_in:' . $llista->usuari_id,
@@ -271,7 +285,7 @@ class LlistaController extends Controller
                 ];
             }
         }
-        
+
         // 5. SINCRONITZACIÓ DE LA RELACIÓ
         // El mètode sync() sincronitza la relació N:N:
         // - Si un usuari compartit ja hi és, actualitza el seu rol.
@@ -284,9 +298,9 @@ class LlistaController extends Controller
     }
 
     /**
-    * Cerca usuaris per nom o correu electrònic (AJAX/JSON).
-    * Exclou l'usuari autenticat.
-    */
+     * Cerca usuaris per nom o correu electrònic (AJAX/JSON).
+     * Exclou l'usuari autenticat.
+     */
     public function searchUsers(Request $request)
     {
         // 1. OBTENIR EL TERME DE CERCA
@@ -301,11 +315,11 @@ class LlistaController extends Controller
 
         // 3. EXECUTAR LA CERCA
         $usuaris = User::where('name', 'LIKE', "%{$searchTerm}%")
-                        ->orWhere('email', 'LIKE', "%{$searchTerm}%")
-                        ->where('id', '!=', $currentUserId) // No es pot compartir amb un mateix
-                        ->select('id', 'name', 'email') // Seleccionar només els camps necessaris
-                        ->limit(10)
-                        ->get();
+            ->orWhere('email', 'LIKE', "%{$searchTerm}%")
+            ->where('id', '!=', $currentUserId) // No es pot compartir amb un mateix
+            ->select('id', 'name', 'email') // Seleccionar només els camps necessaris
+            ->limit(10)
+            ->get();
 
         // 4. RETORNAR EN FORMAT JSON
         return response()->json($usuaris);
