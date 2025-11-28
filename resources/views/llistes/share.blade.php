@@ -1,88 +1,116 @@
 @extends('layouts.master')
 @section('title', 'Compartir')
 @section('content')
-<div class="container mx-auto px-4">
-    <div class="max-w-3xl mx-auto bg-white shadow-xl rounded-lg p-6">
-        <h1 class="text-3xl font-bold text-gray-800 mb-6">
-            Gestió de Permisos de: "{{ $llista->nom }}"
-        </h1>
-        
-        @if (session('success'))
-            <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4" role="alert">
-                <span class="block sm:inline">{{ session('success') }}</span>
-            </div>
-        @endif
-
-        {{-- EL FORMULARI APUNTA AL MÈTODE POST processShare --}}
-        <form method="POST" action="{{ route('llistes.processShare', $llista->id) }}">
-            @csrf
-            
-            <h2 class="text-xl font-semibold text-gray-700 mb-4">Usuaris Compartits</h2>
-
-            <div id="users-container" class="space-y-4">
-                
-                {{-- 1. L'OWNER (NO MODIFICABLE) --}}
-                <div class="flex items-center space-x-4 border-b pb-3 mb-3 bg-gray-50 p-3 rounded">
-                    <div class="flex-grow">
-                        <p class="font-medium text-gray-900">{{ $llista->owner->name }} ({{ $llista->owner->email }})</p>
-                    </div>
-                    <span class="px-3 py-1 text-sm font-semibold text-blue-800 bg-blue-200 rounded-full">
-                        Owner
-                    </span>
-                </div>
-
-                {{-- 2. LLISTA D'USUARIS COMPARTITS --}}
-                {{-- Iterem pels usuaris a través de la relació 'usuaris' (excloent l'owner) --}}
-                @foreach ($llista->usuaris as $user)
-                    @if ($user->id !== $llista->usuari_id)
-                        <div class="flex items-center space-x-4 border-b pb-3 user-entry" data-user-id="{{ $user->id }}">
-                            {{-- ID DE L'USUARI AMAGAT (NECESSARI PER AL SYNC) --}}
-                            <input type="hidden" name="usuaris[{{ $user->id }}][id]" value="{{ $user->id }}">
-
-                            <div class="flex-grow">
-                                <p class="font-medium text-gray-900">{{ $user->name }} ({{ $user->email }})</p>
-                            </div>
-
-                            <select name="usuaris[{{ $user->id }}][rol]" class="border rounded-lg p-2 focus:ring-indigo-500 focus:border-indigo-500 w-32">
-                                <option value="viewer" {{ $user->pivot->rol === 'viewer' ? 'selected' : '' }}>Viewer</option>
-                                <option value="editor" {{ $user->pivot->rol === 'editor' ? 'selected' : '' }}>Editor</option>
-                                <option value="admin" {{ $user->pivot->rol === 'admin' ? 'selected' : '' }}>Admin</option>
-                            </select>
-
-                            {{-- BOTÓ D'ELIMINAR (ELIMINARÀ AQUEST USUARI DEL FORMULARI ABANS D'ENVIAR) --}}
-                            <button type="button" onclick="removeUserEntry(this)" class="text-red-600 hover:text-red-900 transition duration-150 ease-in-out p-2 rounded-full hover:bg-red-50" title="Deixar de compartir">
-                                ❌
-                            </button>
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card shadow-lg border-0">
+                <div class="card-body p-5">
+                    <h1 class="card-title h3 mb-4 d-flex align-items-center text-dark border-bottom pb-3">
+                        {{-- Icona canviada a Bootstrap Icons --}}
+                        <i class="bi bi-person-lock me-3 text-primary"></i>
+                        Gestió de permisos de la llista: "<strong>{{ $llista->nom }}</strong>"
+                    </h1>
+                    
+                    @if (session('success'))
+                        <div class="alert alert-success d-flex align-items-center" role="alert">
+                            {{-- Icona canviada a Bootstrap Icons --}}
+                            <i class="bi bi-check-circle me-3 fs-5"></i>
+                            <span class="d-block">{{ session('success') }}</span>
                         </div>
                     @endif
-                @endforeach
-            </div>
 
-            <hr class="my-6">
-            
-            {{-- 3. AFegir Nou Usuari (IMPLEMENTACIÓ REAL DE L'AUTOCOMPLETAT) --}}
-            <h2 class="text-xl font-semibold text-gray-700 mb-4">Afegir Nou Col·laborador</h2>
+                    <form method="POST" action="{{ route('llistes.processShare', $llista->id) }}">
+                        @csrf
+                        
+                        <h2 class="h5 mt-4 mb-3 d-flex align-items-center text-secondary">
+                            {{-- Icona canviada a Bootstrap Icons --}}
+                            <i class="bi bi-people me-2"></i>
+                            USUARIS COMPARTITS
+                        </h2>
 
-            <div class="mb-4 relative">
-                <label for="user-search" class="block text-sm font-medium text-gray-700">Cercar per nom o correu</label>
-                <input type="text" id="user-search" placeholder="Escriu per cercar usuaris..."
-                       class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2">
-                
-                {{-- CONTENIDOR PELS RESULTATS DE LA CERCA --}}
-                <div id="search-results" class="absolute z-10 w-full bg-white border border-gray-300 rounded-md shadow-lg mt-1 hidden">
-                    {{-- Aquí s'injectaran els resultats amb JavaScript --}}
+                        <div id="users-container" class="list-group list-group-flush mb-4">
+                            
+                            {{-- 1. L'OWNER (NO MODIFICABLE) --}}
+                            <div class="list-group-item d-flex align-items-center bg-light border-start border-5 border-success rounded mb-2 shadow-sm p-3">
+                                {{-- Icona canviada a Bootstrap Icons --}}
+                                <i class="bi bi-gem text-warning fs-5 me-3"></i>
+                                <div class="flex-grow-1">
+                                    <p class="mb-0 fw-medium text-dark">{{ $llista->owner->name }} (<span class="text-muted">{{ $llista->owner->email }}</span>)</p>
+                                </div>
+                                <span class="badge rounded-pill bg-success text-white fw-bold">
+                                    CREADOR
+                                </span>
+                            </div>
+
+                            {{-- 2. LLISTA D'USUARIS COMPARTITS --}}
+                            @foreach ($llista->usuaris as $user)
+                                @if ($user->id !== $llista->usuari_id)
+                                    <div class="list-group-item d-flex align-items-center user-entry py-3 border-bottom" data-user-id="{{ $user->id }}">
+                                        {{-- Icona canviada a Bootstrap Icons --}}
+                                        <i class="bi bi-person me-3 text-secondary"></i>
+                                        
+                                        <input type="hidden" name="usuaris[{{ $user->id }}][id]" value="{{ $user->id }}">
+
+                                        <div class="flex-grow-1 me-3">
+                                            <p class="mb-0 fw-medium text-dark">{{ $user->name }} (<span class="text-muted">{{ $user->email }}</span>)</p>
+                                        </div>
+
+                                        {{-- SELECTOR DE ROLS: Aquí NO podem posar icons de cap mena de manera nativa --}}
+                                        <select name="usuaris[{{ $user->id }}][rol]" class="form-select w-auto me-3">
+                                            <option value="viewer" {{ $user->pivot->rol === 'viewer' ? 'selected' : '' }}>Només visualitzar</option>
+                                            <option value="editor" {{ $user->pivot->rol === 'editor' ? 'selected' : '' }}>Editor</option>
+                                            <option value="admin" {{ $user->pivot->rol === 'admin' ? 'selected' : '' }}>Adminstrador</option>
+                                        </select>
+
+                                        <button type="button" onclick="removeUserEntry(this)" class="btn btn-outline-danger btn-sm rounded-circle" title="Deixar de compartir">
+                                            {{-- Icona canviada a Bootstrap Icons --}}
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                @endif
+                            @endforeach
+                        </div>
+
+                        <hr class="my-4">
+                        
+                        {{-- 3. Afegir Nou Usuari --}}
+                        <h2 class="h5 mb-3 d-flex align-items-center text-secondary">
+                            {{-- Icona canviada a Bootstrap Icons --}}
+                            <i class="bi bi-person-add me-2"></i>
+                            Afegir nou col·laborador
+                        </h2>
+
+                        <div class="mb-4 position-relative">
+                            <label for="user-search" class="form-label">Cercar per nom o correu</label>
+                            <div class="input-group">
+                                {{-- Icona canviada a Bootstrap Icons --}}
+                                <span class="input-group-text"><i class="bi bi-search"></i></span>
+                                <input type="text" id="user-search" placeholder="Escriu per cercar usuaris..."
+                                        class="form-control">
+                            </div>
+                            
+                            <div id="search-results" class="position-absolute z-100 w-100 bg-white border rounded shadow mt-1" style="display: none;">
+                                {{-- Aquí s'injectaran els resultats amb JavaScript --}}
+                            </div>
+                        </div>
+
+                        <div class="mt-4 pt-3 border-top d-flex justify-content-end align-items-center">
+                            <a href="{{ route('llistes.show', $llista->id) }}" class="btn btn-link text-secondary me-3 d-flex align-items-center">
+                                {{-- Icona canviada a Bootstrap Icons --}}
+                                <i class="bi bi-arrow-left-circle me-2"></i>
+                                Tornar a la Llista
+                            </a>
+                            <button type="submit" class="btn btn-primary d-flex align-items-center">
+                                {{-- Icona canviada a Bootstrap Icons --}}
+                                <i class="bi bi-save me-2"></i>
+                                Guardar els canvis
+                            </button>
+                        </div>
+                    </form>
                 </div>
             </div>
-
-            <div class="mt-8 pt-4 border-t">
-                <button type="submit" class="bg-green-600 hover:bg-green-700 text-black font-bold py-2 px-6 rounded-lg transition duration-150 ease-in-out shadow-md">
-                    Guardar Canvis de Permisos
-                </button>
-                <a href="{{ route('llistes.show', $llista->id) }}" class="ml-4 text-gray-600 hover:text-gray-900 transition duration-150 ease-in-out">
-                    Tornar a la Llista
-                </a>
-            </div>
-        </form>
+        </div>
     </div>
 </div>
 
@@ -121,7 +149,7 @@
         clearTimeout(debounceTimeout);
         const query = this.value;
         
-        if (query.length < 3) { 
+        if (query.length < 2) { 
             searchResultsDiv.innerHTML = '';
             searchResultsDiv.classList.add('hidden');
             return;
