@@ -281,4 +281,32 @@ class LlistaController extends Controller
         return redirect()->route('llistes.show', $llista->id)
             ->with('success', 'Permisos de compartició actualitzats correctament.');
     }
+
+    /**
+    * Cerca usuaris per nom o correu electrònic (AJAX/JSON).
+    * Exclou l'usuari autenticat.
+    */
+    public function searchUsers(Request $request)
+    {
+        // 1. OBTENIR EL TERME DE CERCA
+        $searchTerm = $request->get('query');
+
+        if (!$searchTerm) {
+            return response()->json([]);
+        }
+
+        // 2. EXCLOURE L'USUARI ACTUAL (L'OWNER QUE ESTÀ COMPARTINT)
+        $currentUserId = Auth::id();
+
+        // 3. EXECUTAR LA CERCA
+        $usuaris = User::where('name', 'LIKE', "%{$searchTerm}%")
+                        ->orWhere('email', 'LIKE', "%{$searchTerm}%")
+                        ->where('id', '!=', $currentUserId) // No es pot compartir amb un mateix
+                        ->select('id', 'name', 'email') // Seleccionar només els camps necessaris
+                        ->limit(10)
+                        ->get();
+
+        // 4. RETORNAR EN FORMAT JSON
+        return response()->json($usuaris);
+    }
 }

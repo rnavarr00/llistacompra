@@ -60,7 +60,10 @@ Route::middleware('auth')->group(function () {
     // Ruta que retorna un json amb els productes que coincideixen, l'usuari no hauria d'accedir
     // aquí, només és una ruta que retornarem al CREATE en format json.
     Route::get('/productes/search', [ProducteController::class, 'search'])->name('productes.search');
-});
+
+    // Cerca usuaris per nom o correu electrònic en format JSON.
+    Route::get('/usuaris/search', [LlistaController::class, 'searchUsers'])->name('usuaris.search');
+    });
 
 
 // VISTES ADMIN
@@ -68,9 +71,6 @@ Route::middleware('auth')->group(function () {
 Route::middleware([AdminMiddleware::class])->group(function () {
     Route::get('/admin', [AdminController::class, 'index']);
 });
-
-
-// Les rutes comentades han estat substituïdes pel Route::resource
 
 Route::patch(
     '/llistes/{llista_id}/productes/{producte_id}/toggle',
