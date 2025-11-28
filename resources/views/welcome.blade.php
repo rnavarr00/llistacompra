@@ -27,7 +27,7 @@
                 <h1 class="fw-bold mb-3"
                     style="font-size: 3rem; line-height: 1.2;">
                     Organitza la teva vida<br>
-                    amb <span style="color: #ffe066;">ListApp</span>
+                    amb <span style="color: #ffe066;">LlistApp</span>
                 </h1>
 
                 <p class="mb-4"
