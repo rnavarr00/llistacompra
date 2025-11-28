@@ -173,11 +173,12 @@ class LlistaController extends Controller
             'nom' => 'required|string|max:255|unique:llistes,nom,' . $id,
             'productes' => 'required|array|min:1',
             'productes.*.id' => 'required|exists:productes,id',
-            'productes.*.quantitat' => 'required|integer|min:1',
+            'productes.*.quantitat' => 'required|integer|min:1|max:100',
         ], [
             'nom.required' => 'Has d’introduir un nom per a la llista.',
             'nom.unique' => 'Ja existeix una llista amb aquest nom.',
             'productes.required' => 'Has d’afegir almenys un producte.',
+            'productes.*.quantitat.max' => 'La quantitat màxima permesa és de 100 unitats.',
         ]);
 
         // 3. Actualitzar nom i productes

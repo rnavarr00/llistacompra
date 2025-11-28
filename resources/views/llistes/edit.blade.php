@@ -29,7 +29,7 @@
                     </div>
                     <div class="col-md-3">
                         <input type="number" class="form-control" name="productes[{{ $loop->index }}][quantitat]"
-                               value="{{ $producte->pivot->quantitat }}" min="1" required>
+                               value="{{ $producte->pivot->quantitat }}" min="1" max="100" required>
                     </div>
                     <div class="col-md-2">
                         <button type="button" class="btn btn-danger eliminar-producte">Eliminar</button>
