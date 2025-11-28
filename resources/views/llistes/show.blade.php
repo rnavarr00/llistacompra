@@ -8,7 +8,10 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div class="d-flex align-items-center">
             <i class="{{ $llista->icona ?? 'bi bi-list-check' }} text-primary fs-2 me-3"></i>
-            <h2 class="fw-bold text-primary mb-0">{{ ucfirst($llista->nom) }}</h2>
+            <h2 class="fw-bold text-primary mb-0" style="font-size: 1.7rem;">
+                {{ ucfirst($llista->nom) }}
+            </h2>
+
         </div>
 
         <a href="{{ route('llistes.index') }}" class="btn btn-outline-primary d-flex align-items-center">
