@@ -151,7 +151,7 @@
         
         if (query.length < 2) { 
             searchResultsDiv.innerHTML = '';
-            searchResultsDiv.classList.add('hidden');
+            searchResultsDiv.style.display = 'none';
             return;
         }
 
@@ -163,14 +163,14 @@
 
     // 2. Funció per fer la petició AJAX
     function fetchUsers(query) {
-        fetch('{{ route('usuaris.search') }}?query=' + encodeURIComponent(query))
+        fetch('{{ route("usuaris.search") }}?query=' + encodeURIComponent(query))
             .then(response => response.json())
             .then(users => {
                 searchResultsDiv.innerHTML = '';
                 
                 if (users.length === 0) {
                     searchResultsDiv.innerHTML = '<div class="p-2 text-gray-500">No s\'ha trobat cap usuari.</div>';
-                    searchResultsDiv.classList.remove('hidden');
+                    searchResultsDiv.style.display = 'block';
                     return;
                 }
 
@@ -190,7 +190,7 @@
                     searchResultsDiv.appendChild(resultItem);
                 });
                 
-                searchResultsDiv.classList.remove('hidden');
+                searchResultsDiv.style.display = 'block';
             })
             .catch(error => {
                 console.error('Error en la cerca d\'usuaris:', error);
@@ -201,7 +201,7 @@
     // 5. Funció per afegir l'usuari al formulari de compartició
     function addUserToShare(user) {
         // Ocultar resultats i netejar input
-        searchResultsDiv.classList.add('hidden');
+        searchResultsDiv.style.display = 'none';
         userSearchInput.value = '';
         
         // Evitar duplicats
@@ -243,7 +243,7 @@
     // Ocultar resultats si l'usuari fa clic fora de la caixa de cerca
     document.addEventListener('click', function(event) {
         if (!userSearchInput.contains(event.target) && !searchResultsDiv.contains(event.target)) {
-            searchResultsDiv.classList.add('hidden');
+            searchResultsDiv.style.display = 'none';
         }
     });
 

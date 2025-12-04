@@ -314,10 +314,12 @@ class LlistaController extends Controller
         $currentUserId = Auth::id();
 
         // 3. EXECUTAR LA CERCA
-        $usuaris = User::where('name', 'LIKE', "%{$searchTerm}%")
-            ->orWhere('email', 'LIKE', "%{$searchTerm}%")
-            ->where('id', '!=', $currentUserId) // No es pot compartir amb un mateix
-            ->select('id', 'name', 'email') // Seleccionar només els camps necessaris
+        $usuaris = User::where(function ($query) use ($searchTerm) {
+            $query->where('name', 'LIKE', "%{$searchTerm}%")
+                ->orWhere('email', 'LIKE', "%{$searchTerm}%");
+        })
+            ->where('id', '!=', $currentUserId)
+            ->select('id', 'name', 'email')
             ->limit(10)
             ->get();
 

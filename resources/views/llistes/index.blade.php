@@ -8,9 +8,11 @@
 
     {{-- ENCAPÇALAMENT AMB BOTÓ DE CREAR LLISTA --}}
     <div class="d-flex justify-content-between align-items-center my-4">
-        <h2 class="fw-bold text-primary mb-0 fs-3">
-            <i class="bi bi-list-check me-2 fs-3"></i> Les meves llistes
+        <h2 class="titol-dash text-primary fw-bold">
+            Les meves llistes
         </h2>
+
+
 
         <a href="{{ route('llistes.create') }}"
             class="btn btn-primary btn-lg px-4 d-flex align-items-center justify-content-center shadow-sm">
@@ -33,32 +35,34 @@
                         <i class="bi bi-three-dots-vertical"></i>
                     </button>
                     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="menu{{ $llista->id }}">
-                        
+
                         {{-- OPCIÓ 1: EDITAR --}}
                         {{-- Només es mostra si l'usuari pot actualitzar (Owner, Admin, Editor) --}}
                         @can('update', $llista)
-                            <li><a class="dropdown-item" href="{{ route('llistes.edit', $llista->id) }}">Editar</a></li>
+                        <li><a class="dropdown-item" href="{{ route('llistes.edit', $llista->id) }}">Editar</a></li>
                         @endcan
 
                         {{-- OPCIÓ 2: COMPARTIR (NOU) --}}
                         {{-- Només es mostra si l'usuari pot compartir (Owner, Admin) --}}
                         @can('share', $llista)
-                            <li>
-                                <a class="dropdown-item" href="{{ route('llistes.share', $llista->id) }}">
-                                    <i class="bi bi-share-fill me-2"></i> Compartir
-                                </a>
-                            </li>
+                        <li>
+                            <a class="dropdown-item" href="{{ route('llistes.share', $llista->id) }}">
+                                <i class="bi bi-share-fill me-2"></i> Compartir
+                            </a>
+                        </li>
                         @endcan
 
                         {{-- Separador si hi ha accions per sobre (opcional, però net) --}}
                         @if(Gate::check('update', $llista) || Gate::check('share', $llista))
-                            <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
                         @endif
 
                         {{-- OPCIÓ 3: ELIMINAR --}}
                         {{-- Només es mostra si l'usuari pot eliminar (Només Owner) --}}
                         @can('delete', $llista)
-                            <li>
+                        <li>
                             <form action="{{ route('llistes.destroy', $llista->id) }}" method="POST" onsubmit="return confirm('Estàs segur que vols eliminar aquesta llista?')">
                                 @csrf
                                 @method('DELETE')
@@ -67,7 +71,7 @@
                                     <i class="bi bi-trash-fill me-2"></i> Eliminar
                                 </button>
                             </form>
-                            </li>
+                        </li>
                         @endcan
                     </ul>
                 </div>
@@ -99,6 +103,37 @@
     <style>
         .list-card:hover {
             box-shadow: 0 0 20px rgba(0, 0, 0, 0.15) !important;
+        }
+
+        .list-card:hover {
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.15) !important;
+        }
+
+        /* --- Nou títol estil dashboard --- */
+        .titol-dash {
+            font-size: 2.6rem;
+            font-weight: 800;
+            letter-spacing: 1px;
+            padding: 6px 0;
+            border-bottom: 4px solid rgba(13, 110, 253, 0.4);
+            display: inline-block;
+
+            /* animació suau */
+            opacity: 0;
+            transform: translateY(12px);
+            animation: dashFade 0.6s ease-out forwards;
+        }
+
+        @keyframes dashFade {
+            from {
+                opacity: 0;
+                transform: translateY(18px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
     </style>
 
