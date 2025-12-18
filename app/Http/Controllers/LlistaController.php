@@ -19,48 +19,33 @@ class LlistaController extends Controller
      */
     private function llistesPropies(User $user)
     {
-        // 1. UTILITZEM LA RELACIÓ llistesCreades() del model User (1:N)
-        // Podríem usar $user->llistesCreades, però la query simple és igual de ràpida.
         return Llista::where('usuari_id', $user->id)
-            ->get();
+            ->get()
+            ->each(function ($llista) {
+                $llista->es_compartida = false;
+            });
     }
 
-    /**
-     * Mètode de suport: Obté les llistes compartides amb l'usuari actual.
-     * @param User $user
-     * @return \Illuminate\Database\Eloquent\Collection
-     */
     private function llistesCompartides(User $user)
     {
-        // 1. OBTENIR ELS ID DE LES LLISTES COMPARTIDES (Via relació Many-to-Many amb Eloquent)
-        // Això és més net que usar DB::table().
-        $llistes_compartides_ids = $user->llistesCompartides()->pluck('llista_id');
-
-        // 2. RETORNAR ELS OBJECTES LLISTA
-        return Llista::whereIn('id', $llistes_compartides_ids)
-            ->get();
+        return $user->llistesCompartides()
+            ->get()
+            ->each(function ($llista) {
+                $llista->es_compartida = true;
+            });
     }
 
-    /**
-     * Display a listing of the resource.
-     * Mostrar totes les llistes (pròpies i compartides) que tingui l'usuari loguejat.
-     */
     public function index()
     {
-        // 1. OBTENIR L'USUARI AUTENTICAT
         $user = Auth::user();
 
-        // 2. RECOLLIR LES DUES COLLECTIONS
         $llistes_propies = $this->llistesPropies($user);
         $llistes_compartides = $this->llistesCompartides($user);
 
-        // 3. FUSIONAR I ORDENAR
-        // Utilitzem merge() i sortByDesc() de Laravel Collections.
         $llistes = $llistes_propies
             ->merge($llistes_compartides)
             ->sortByDesc('created_at');
 
-        // 4. RETORNAR LA VISTA
         return view('llistes.index', compact('llistes'));
     }
 
