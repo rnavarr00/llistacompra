@@ -3,14 +3,13 @@
 @section('title', 'Crear llista')
 
 @section('content')
-<div class="container py-4"> <!-- Añadimos padding vertical con py-4 -->
-    <h1 class="mb-4 fw-bold text-decoration-underline">CREAR LLISTA</h1> <!-- Más separación debajo del título -->
+<div class="container py-4"> 
+    <h1 class="mb-4 fw-bold text-decoration-underline">CREAR LLISTA</h1> 
 
     <form action="{{ route('llistes.store') }}" method="POST">
         @csrf
-        <div class="form-group mb-3"> <!-- Más separación entre elementos -->
+        <div class="form-group mb-3"> 
 
-            <!-- Nom de la llista -->
             <label for="listName" class="mb-2">Nom de la llista:</label>
             <div class="row">
                 <div class="col-md-6">
@@ -87,15 +86,15 @@
 {{-- Script que ens ajudarà a autocompletar el que l'usuari escrigui al producte --}}
 <script>
     document.addEventListener('DOMContentLoaded', () => {
-        // --- Autocompletado ---
         const input = document.getElementById('nomProducte');
         const suggestions = document.getElementById('suggestions');
         const hiddenInput = document.getElementById('producte_id');
         const searchUrl = input.dataset.searchUrl;
         let timeout = null;
 
+        // S'activa cada cop que l'usuari escriu (o borra) qualsevol tecla del teclat
         input.addEventListener('input', function() {
-            const query = this.value.trim();
+            const query = this.value.trim(); // borrem els espais en blanc
             hiddenInput.value = '';
             suggestions.innerHTML = '';
 
@@ -103,7 +102,7 @@
 
             clearTimeout(timeout);
             timeout = setTimeout(() => {
-                fetch(`${searchUrl}?q=${encodeURIComponent(query)}`)
+                fetch(`${searchUrl}?q=${encodeURIComponent(query)}`) // encodeUri el que fa es no tindre en compte accents, dieresis i demés
                     .then(res => res.json())
                     .then(data => {
                         suggestions.innerHTML = '';
@@ -120,6 +119,8 @@
                             suggestions.appendChild(item);
                         });
                     });
+            // Buscarem quan hagi passat un temps (0.3 segons), per evitar fer una petició per cada lletra
+            // que escrigui o borri l'usuari
             }, 300);
         });
 
@@ -129,7 +130,6 @@
             }
         });
 
-        // --- Botón Afegir producte ---
         let productIndex = 0;
         let productesAfegits = new Set(); //Control de duplicats
 
@@ -153,10 +153,9 @@
                 return;
             }
 
-            // Afegim producte al Set
+            // Afegim producte 
             productesAfegits.add(producteId);
 
-            // Inputs ocultos
             const inputId = document.createElement('input');
             inputId.type = 'hidden';
             inputId.name = `productes[${productIndex}][id]`;
@@ -170,7 +169,7 @@
             productesContainer.appendChild(inputId);
             productesContainer.appendChild(inputQuantitat);
 
-            // Lista visual
+            // Llista visual
             const li = document.createElement('li');
             li.classList.add('list-group-item', 'd-flex', 'justify-content-between');
             li.textContent = `${producteName} — Quantitat: ${quantitat}`;
@@ -178,7 +177,7 @@
 
             productIndex++;
 
-            // Limpiar inputs
+            // Netejar input un cop s'ha afegit el producte
             input.value = '';
             hiddenInput.value = '';
             document.getElementById('quantitat').value = 1;

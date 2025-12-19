@@ -63,19 +63,17 @@
     // Inicialització de l'índex per als nous productes
     let index = {{ $llista->productes->count() }}; 
     
-    // Elements del DOM
     const productesDiv = document.getElementById('productes-lista');
     const botoAfegir = document.getElementById('afegir-producte');
     const inputQuantitatNou = document.getElementById('quantitat_nou'); // <--- NOU INPUT
 
-    // --- Autocompletat Variables ---
     const inputCercador = document.getElementById('cercador-productes');
     const suggestions = document.getElementById('suggestions');
     const hiddenInputId = document.getElementById('producte_id_nou');
     const searchUrl = inputCercador.dataset.searchUrl;
     let timeout = null;
 
-    // --- Control de Duplicats ---
+    // Control de Duplicats
     const productesAfegits = new Set();
     
     // Omplir el Set amb els IDs dels productes ja existents a la llista
@@ -83,9 +81,6 @@
         productesAfegits.add(input.value);
     });
 
-    // ======================================================
-    // 1. LÒGICA D'AUTOCOMPLETAT
-    // ======================================================
     inputCercador.addEventListener('input', function() {
         const query = this.value.trim();
         hiddenInputId.value = ''; // Netejar l'ID al començar a escriure
@@ -116,7 +111,7 @@
                         suggestions.appendChild(item);
                     });
                 });
-        }, 300); // Debounce
+        }, 300); 
     });
 
     // Amagar suggeriments al fer clic fora dels elements
@@ -126,34 +121,30 @@
         }
     });
 
-    // ======================================================
-    // 2. LÒGICA D'AFEGIR PRODUCTE
-    // ======================================================
     botoAfegir.addEventListener('click', function() {
         const producteId = hiddenInputId.value;
         const producteName = inputCercador.value.trim();
-        // CAPTUREM EL VALOR DE LA QUANTITAT JUST ABANS D'AFEGIR
+        // guardem la quantitat abans d'afegir
         const quantitat = inputQuantitatNou.value; 
 
-        // Validació: quantitat
+        // Validem la quantitat
         if (!quantitat || parseInt(quantitat) < 1) {
             alert('Indica una quantitat vàlida (mínim 1).');
             return;
         }
 
-        // Validació: assegurar-se que s'ha seleccionat un producte vàlid
+        // Validem el producte
         if (!producteId || !producteName) {
             alert('Has de seleccionar un producte de la llista de suggeriments abans d\'afegir.');
             return;
         }
 
-        // Evitar productes duplicats
+        // Evitem productes duplicats
         if (productesAfegits.has(producteId)) {
             alert('Aquest producte ja ha estat afegit a la llista.');
             return;
         }
 
-        // Afegir l'ID del nou producte al Set de control
         productesAfegits.add(producteId);
 
         // Creació de la nova fila
@@ -179,17 +170,14 @@
         inputCercador.value = '';
         hiddenInputId.value = '';
         suggestions.innerHTML = '';
-        inputQuantitatNou.value = '1'; // RESTAURAR LA QUANTITAT A 1 PER AL SEGÜENT PRODUCTE
+        inputQuantitatNou.value = '1';
     });
 
-    // ======================================================
-    // 3. LÒGICA D'ELIMINAR PRODUCTE
-    // ======================================================
     document.addEventListener('click', e => {
         if (e.target.classList.contains('eliminar-producte')) {
             const rowElement = e.target.closest('.row');
             
-            // Trobar l'ID del producte per eliminar-lo del Set
+            // Trobar l'ID del producte per eliminar-lo
             const producteIdEliminar = rowElement.querySelector('input[name$="[id]"]').value;
             
             if (productesAfegits.has(producteIdEliminar)) {

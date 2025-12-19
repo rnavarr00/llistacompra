@@ -6,7 +6,6 @@
 
 <div class="container">
 
-    {{-- ENCAPÇALAMENT AMB BOTÓ DE CREAR LLISTA --}}
     <div class="d-flex justify-content-between align-items-center my-4">
         <h2 class="titol-dash text-primary fw-bold">
             Les meves llistes
@@ -17,16 +16,14 @@
         </a>
     </div>
 
-    {{-- GRAELLA DE LLISTES --}}
     <div class="row g-4">
-
         @forelse ($llistes as $llista)
         <div class="col-12 col-sm-6 col-md-4">
             <div class="card h-100 text-center shadow-sm border-0 position-relative list-card {{ $llista->es_compartida ? 'shared-bg' : '' }}"
                 onclick="window.location=`{{ route('llistes.show', $llista->id) }}`"
                 style="cursor:pointer; transition:all 0.2s ease-in-out;">
 
-                {{-- INDICADOR DE LLISTA COMPARTIDA (Superior Esquerra) --}}
+                {{-- Comprovem les llistes compartides --}}
                 @if($llista->es_compartida)
                 <div class="position-absolute top-0 start-0 m-2">
                     <span class="badge rounded-pill bg-info text-dark shadow-sm">
@@ -35,7 +32,7 @@
                 </div>
                 @endif
 
-                {{-- MENÚ DE TRES PUNTETS --}}
+                {{-- Menú de 3 punts amb diferents funcions --}}
                 <div class="dropdown position-absolute top-0 end-0 m-2">
                     <button class="btn btn-light btn-sm" type="button" id="menu{{ $llista->id }}" data-bs-toggle="dropdown" aria-expanded="false">
                         <i class="bi bi-three-dots-vertical"></i>
@@ -72,7 +69,6 @@
                     </ul>
                 </div>
 
-                {{-- COS DE LA TARGETA --}}
                 <div class="card-body d-flex flex-column justify-content-center align-items-center mt-3">
                     <div class="fs-1 mb-3 text-secondary">
                         <i class="{{ $llista->icona ?? 'bi bi-list-check' }}"></i>
@@ -95,8 +91,8 @@
     <style>
         /* Diferenciació visual per compartides */
         .shared-bg {
-            background-color: #f8f9fa; /* Gris molt clar */
-            border-left: 4px solid #0dcaf0 !important; /* Bordó lateral informatiu */
+            background-color: #f8f9fa;
+            border-left: 4px solid #0dcaf0 !important;
         }
 
         .list-card:hover {

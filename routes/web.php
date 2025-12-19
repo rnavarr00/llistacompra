@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Route;
 use Laravel\Socialite\Facades\Socialite;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
-use App\Http\Controllers\LlistaController; // Ja importada
+use App\Http\Controllers\LlistaController; 
 use App\Http\Controllers\ProducteController;
 use App\Http\Middleware\AdminMiddleware;
 
@@ -45,10 +45,8 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     // Rutes de llistes (totes les accions: index, create, show, edit, etc.)
-    // RECOMANACIÓ: Utilitzem LlistaController::class directament
     Route::resource('llistes', LlistaController::class);
 
-    // RUTES DE COMPARTICIÓ DE LLISTES (NOU)
     // 1. Ruta per mostrar el formulari de compartició (GET)
     Route::get('llistes/{id}/share', [LlistaController::class, 'share'])
         ->name('llistes.share');

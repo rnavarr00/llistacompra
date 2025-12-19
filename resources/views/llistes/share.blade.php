@@ -7,14 +7,13 @@
             <div class="card shadow-lg border-0">
                 <div class="card-body p-5">
                     <h1 class="card-title h3 mb-4 d-flex align-items-center text-dark border-bottom pb-3">
-                        {{-- Icona canviada a Bootstrap Icons --}}
                         <i class="bi bi-person-lock me-3 text-primary"></i>
                         Gestió de permisos de la llista: "<strong>{{ $llista->nom }}</strong>"
                     </h1>
                     
                     @if (session('success'))
                         <div class="alert alert-success d-flex align-items-center" role="alert">
-                            {{-- Icona canviada a Bootstrap Icons --}}
+
                             <i class="bi bi-check-circle me-3 fs-5"></i>
                             <span class="d-block">{{ session('success') }}</span>
                         </div>
@@ -24,16 +23,15 @@
                         @csrf
                         
                         <h2 class="h5 mt-4 mb-3 d-flex align-items-center text-secondary">
-                            {{-- Icona canviada a Bootstrap Icons --}}
+
                             <i class="bi bi-people me-2"></i>
                             USUARIS COMPARTITS
                         </h2>
 
                         <div id="users-container" class="list-group list-group-flush mb-4">
                             
-                            {{-- 1. L'OWNER (NO MODIFICABLE) --}}
                             <div class="list-group-item d-flex align-items-center bg-light border-start border-5 border-success rounded mb-2 shadow-sm p-3">
-                                {{-- Icona canviada a Bootstrap Icons --}}
+    
                                 <i class="bi bi-gem text-warning fs-5 me-3"></i>
                                 <div class="flex-grow-1">
                                     <p class="mb-0 fw-medium text-dark">{{ $llista->owner->name }} (<span class="text-muted">{{ $llista->owner->email }}</span>)</p>
@@ -43,11 +41,11 @@
                                 </span>
                             </div>
 
-                            {{-- 2. LLISTA D'USUARIS COMPARTITS --}}
+                            {{-- Llista d'usuaris compartits --}}
                             @foreach ($llista->usuaris as $user)
                                 @if ($user->id !== $llista->usuari_id)
                                     <div class="list-group-item d-flex align-items-center user-entry py-3 border-bottom" data-user-id="{{ $user->id }}">
-                                        {{-- Icona canviada a Bootstrap Icons --}}
+            
                                         <i class="bi bi-person me-3 text-secondary"></i>
                                         
                                         <input type="hidden" name="usuaris[{{ $user->id }}][id]" value="{{ $user->id }}">
@@ -56,7 +54,6 @@
                                             <p class="mb-0 fw-medium text-dark">{{ $user->name }} (<span class="text-muted">{{ $user->email }}</span>)</p>
                                         </div>
 
-                                        {{-- SELECTOR DE ROLS: Aquí NO podem posar icons de cap mena de manera nativa --}}
                                         <select name="usuaris[{{ $user->id }}][rol]" class="form-select w-auto me-3">
                                             <option value="viewer" {{ $user->pivot->rol === 'viewer' ? 'selected' : '' }}>Només visualitzar</option>
                                             <option value="editor" {{ $user->pivot->rol === 'editor' ? 'selected' : '' }}>Editor</option>
@@ -64,19 +61,16 @@
                                         </select>
 
                                         <button type="button" onclick="removeUserEntry(this)" class="btn btn-outline-danger btn-sm rounded-circle" title="Deixar de compartir">
-                                            {{-- Icona canviada a Bootstrap Icons --}}
+                
                                             <i class="bi bi-trash"></i>
                                         </button>
                                     </div>
                                 @endif
                             @endforeach
                         </div>
-
                         <hr class="my-4">
-                        
-                        {{-- 3. Afegir Nou Usuari --}}
+                    
                         <h2 class="h5 mb-3 d-flex align-items-center text-secondary">
-                            {{-- Icona canviada a Bootstrap Icons --}}
                             <i class="bi bi-person-add me-2"></i>
                             Afegir nou col·laborador
                         </h2>
@@ -84,25 +78,24 @@
                         <div class="mb-4 position-relative">
                             <label for="user-search" class="form-label">Cercar per nom o correu</label>
                             <div class="input-group">
-                                {{-- Icona canviada a Bootstrap Icons --}}
+    
                                 <span class="input-group-text"><i class="bi bi-search"></i></span>
                                 <input type="text" id="user-search" placeholder="Escriu per cercar usuaris..."
                                         class="form-control">
                             </div>
                             
                             <div id="search-results" class="position-absolute z-100 w-100 bg-white border rounded shadow mt-1" style="display: none;">
-                                {{-- Aquí s'injectaran els resultats amb JavaScript --}}
                             </div>
                         </div>
 
                         <div class="mt-4 pt-3 border-top d-flex justify-content-end align-items-center">
                             <a href="{{ route('llistes.show', $llista->id) }}" class="btn btn-link text-secondary me-3 d-flex align-items-center">
-                                {{-- Icona canviada a Bootstrap Icons --}}
+    
                                 <i class="bi bi-arrow-left-circle me-2"></i>
                                 Tornar a la Llista
                             </a>
                             <button type="submit" class="btn btn-primary d-flex align-items-center">
-                                {{-- Icona canviada a Bootstrap Icons --}}
+    
                                 <i class="bi bi-save me-2"></i>
                                 Guardar els canvis
                             </button>
@@ -115,7 +108,7 @@
 </div>
 
 <script>
-    // FUNCIÓ JAVASCRIPT PER ELIMINAR UN USUARI COMPARTIT DEL FORMULARI
+    // Eliminar un usuari
     function removeUserEntry(button) {
         if (confirm('Estàs segur que vols deixar de compartir aquesta llista amb aquest usuari?')) {
             const entry = button.closest('.user-entry');
@@ -128,15 +121,10 @@
         }
     }
     
-    // ----------------------------------------------------------------------------------
-    // LÒGICA D'AUTOCOMPLETAT D'USUARIS
-    // ----------------------------------------------------------------------------------
-    
     const userSearchInput = document.getElementById('user-search');
     const searchResultsDiv = document.getElementById('search-results');
     const usersContainer = document.getElementById('users-container');
     
-    // Inicialitzem un Set per guardar els IDs dels usuaris actuals i evitar duplicats
     const existingUserIds = new Set(
         Array.from(usersContainer.querySelectorAll('.user-entry'))
              .map(el => el.dataset.userId)
@@ -144,7 +132,6 @@
     
     let debounceTimeout;
 
-    // 1. Escolta l'escriptura a l'input de cerca
     userSearchInput.addEventListener('input', function() {
         clearTimeout(debounceTimeout);
         const query = this.value;
@@ -155,13 +142,11 @@
             return;
         }
 
-        // Debounce: espera 300ms abans de llançar la petició AJAX
         debounceTimeout = setTimeout(() => {
             fetchUsers(query);
         }, 300);
     });
 
-    // 2. Funció per fer la petició AJAX
     function fetchUsers(query) {
         fetch('{{ route("usuaris.search") }}?query=' + encodeURIComponent(query))
             .then(response => response.json())
@@ -175,7 +160,6 @@
                 }
 
                 users.forEach(user => {
-                    // 3. Excloure usuaris que ja estan compartint la llista
                     if (existingUserIds.has(String(user.id))) {
                         return;
                     }
@@ -184,7 +168,6 @@
                     resultItem.classList.add('p-2', 'hover:bg-indigo-100', 'cursor-pointer', 'text-gray-900', 'border-b', 'last:border-b-0');
                     resultItem.innerHTML = `<span class="font-semibold">${user.name}</span> (${user.email})`;
                     
-                    // 4. Afegir l'usuari al fer clic
                     resultItem.addEventListener('click', () => addUserToShare(user));
                     
                     searchResultsDiv.appendChild(resultItem);
@@ -198,18 +181,14 @@
             });
     }
 
-    // 5. Funció per afegir l'usuari al formulari de compartició
     function addUserToShare(user) {
-        // Ocultar resultats i netejar input
         searchResultsDiv.style.display = 'none';
         userSearchInput.value = '';
         
-        // Evitar duplicats
         if (existingUserIds.has(String(user.id))) {
             return;
         }
 
-        // Marcar com afegit
         existingUserIds.add(String(user.id));
         
         // Crear la nova línia HTML (similar a les existents)
