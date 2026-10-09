@@ -36,8 +36,8 @@
                             @foreach ($columna1 as $categoria => $productes)
 
                             <h5 class="fw-bold text-primary mt-3 mb-2">
-                                <i class="bi bi-folder2-open me-2"></i>
-                                {{ $categoria }}
+                                <i class="bi {{ \App\Models\Categoria::imatgeCategoria($categoria) }} me-2"></i>
+                                {{ $categoria }} 
                             </h5>
 
                             <ul class="list-group list-group-flush mb-3">
