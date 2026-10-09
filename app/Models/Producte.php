@@ -28,4 +28,19 @@ class Producte extends Model
             ->withPivot('comprat', 'quantitat')
             ->withTimestamps();
     }
+
+    // Funció per ignorar els accents i majúscules. Per evitar problemes quan es busqui el producte
+    public static function normalitzar(string $text): string
+    {
+        $text = mb_strtolower($text);
+
+        return strtr($text, [
+            'à' => 'a', 'á' => 'a',
+            'è' => 'e', 'é' => 'e',
+            'ì' => 'i', 'í' => 'i',
+            'ò' => 'o', 'ó' => 'o',
+            'ù' => 'u', 'ú' => 'u',
+            'ü' => 'u', 'ï' => 'i',
+        ]);
+    }
 }
