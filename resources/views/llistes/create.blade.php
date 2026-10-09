@@ -4,8 +4,8 @@
 
 @section('content')
 <div class="container py-4"> 
-    <h1 class="mb-4 fw-bold text-decoration-underline">CREAR LLISTES</h1> 
-    
+    <h1 class="mb-4 fw-bold text-decoration-underline">CREAR LLISTA</h1> 
+
     <form action="{{ route('llistes.store') }}" method="POST">
         @csrf
         <div class="form-group mb-3"> 
