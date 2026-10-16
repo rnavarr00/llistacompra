@@ -94,30 +94,28 @@
                                             @foreach ($productes as $producte)
                                             @php $comprat = $producte['pivot']['comprat']; @endphp
                                             <li class="list-group-item py-3 px-2 d-flex align-items-center border-0 border-bottom producte-row {{ $comprat ? 'comprat' : '' }}"
-                                                data-id="{{ $producte['id'] }}">
+                                            data-id="{{ $producte['id'] }}">
 
-                                                <input type="checkbox" class="form-check-input me-3 fs-5 toggle-comprat"
-                                                       data-url="{{ route('productes.toggle', ['llista_id' => $llista->id, 'producte_id' => $producte['id']]) }}"
-                                                       {{ $comprat ? 'checked' : '' }}>
+                                            <input type="checkbox" class="form-check-input me-3 fs-5 toggle-comprat"
+                                                data-url="{{ route('productes.toggle', ['llista_id' => $llista->id, 'producte_id' => $producte['id']]) }}"
+                                                {{ $comprat ? 'checked' : '' }}>
 
-                                                <input type="hidden" name="productes[{{ $i }}][id]" value="{{ $producte['id'] }}">
+                                            <input type="hidden" name="productes[{{ $i }}][id]" value="{{ $producte['id'] }}">
 
-                                                @if ($potEditar)
-                                                    <input type="number" class="form-control form-control-sm me-3 quantitat"
-                                                           style="width:80px;" name="productes[{{ $i }}][quantitat]"
-                                                           value="{{ $producte['pivot']['quantitat'] }}" min="1" max="100" required>
-                                                @else
-                                                    <span class="fs-5 fw-semibold me-3 text-secondary quantitat">{{ $producte['pivot']['quantitat'] }}x</span>
-                                                @endif
+                                            <span class="fs-5 fw-medium nom">{{ $producte['nom'] }}</span>
 
-                                                <span class="fs-5 fw-medium nom">{{ $producte['nom'] }}</span>
+                                            @if ($potEditar)
+                                                <input type="number" class="form-control form-control-sm ms-auto me-3 quantitat"
+                                                    style="width:80px;" name="productes[{{ $i }}][quantitat]"
+                                                    value="{{ $producte['pivot']['quantitat'] }}" min="1" max="100" required>
 
-                                                @if ($potEditar)
-                                                    <button type="button" class="btn btn-sm btn-outline-danger ms-auto eliminar-producte" title="Eliminar">
-                                                        <i class="bi bi-trash"></i>
-                                                    </button>
-                                                @endif
-                                            </li>
+                                                <button type="button" class="btn btn-sm btn-outline-danger eliminar-producte" title="Eliminar">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            @else
+                                                <span class="fs-5 fw-semibold ms-auto text-secondary quantitat">{{ $producte['pivot']['quantitat'] }}x</span>
+                                            @endif
+                                        </li>
                                             @php $i++; @endphp
                                             @endforeach
                                         </ul>
