@@ -21,10 +21,6 @@
     <div class="card shadow-sm border-0">
         <div class="card-body p-4">
 
-            <h5 class="fw-semibold mb-4 text-secondary fs-4">
-                <i class="bi bi-cart-check me-2"></i> Productes de la llista
-            </h5>
-
             @if ($llista->productes->count())
 
             <div class="row g-4">
