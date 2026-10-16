@@ -77,9 +77,6 @@
         {{-- Productes existents, per categories --}}
         <div class="card shadow-sm border-0">
             <div class="card-body p-4">
-                <h5 class="fw-semibold mb-4 text-secondary fs-4">
-                    <i class="bi bi-cart-check me-2"></i> Productes de la llista
-                </h5>
 
                 @if (count($columna1))
                 <div class="row g-4">
@@ -90,7 +87,8 @@
                                 <div class="card-body">
                                     @foreach ($columna as $categoria => $productes)
                                         <h5 class="fw-bold text-primary mt-3 mb-2">
-                                            <i class="bi bi-folder2-open me-2"></i>{{ $categoria }}
+                                            <i class="{{ \App\Models\Categoria::imatgeCategoria($categoria) }} me-2"></i>
+                                            </i>{{ $categoria }}
                                         </h5>
                                         <ul class="list-group list-group-flush mb-3">
                                             @foreach ($productes as $producte)
