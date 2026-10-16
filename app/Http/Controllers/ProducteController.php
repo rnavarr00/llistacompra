@@ -37,12 +37,17 @@ class ProducteController extends Controller
             return response()->json([]);
         }
 
+        // Passem el producte per la funció normalitzar, explicada al Model
+        $qNormalitzada = Producte::normalitzar($q);
+
         // Busquem per l'inici de paraula (case-insensitive)
         $products = Producte::query()
-            ->where('nom', 'like', $q . '%')
-            ->orderBy('nom')
-            ->limit(10)
-            ->get(['id', 'nom']);
+            ->orderBy('nom') 
+            ->get(['id', 'nom']) 
+            ->filter(function ($product) use ($qNormalitzada) { 
+                return str_starts_with( 
+                    Producte::normalitzar($product->nom), $qNormalitzada ); }) 
+                    ->take(10) ->values();
 
         return response()->json($products);
     }
