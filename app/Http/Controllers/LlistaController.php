@@ -8,6 +8,7 @@ use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class LlistaController extends Controller
 {
@@ -57,78 +58,56 @@ class LlistaController extends Controller
     // Crear una lista
     public function create()
     {
-        return view('llistes.create');
+        return view('llistes.list', $this->dadesVista(new Llista()));
     }
 
     /**
      * Store a newly created resource in storage.
      */
     public function store(Request $request)
-    {
-        // Validació de la llista
-        $validatedData = $request->validate([
-            'nom' => 'required|string|max:255|unique:llistes,nom',
-            'productes' => 'required|array',
+{
+    $validated = $request->validate(
+        [
+            'nom' => [
+                'required', 'string', 'max:255',
+                Rule::unique('llistes', 'nom')->where('usuari_id', Auth::id()),
+            ],
+            'productes' => 'nullable|array',
             'productes.*.id' => 'required|exists:productes,id',
-            'productes.*.quantitat' => 'required|integer|min:1',
-        ], [
-            'nom.unique' => 'Ja existeix una llista amb aquest nom.',
-            'productes.required' => 'Has d’afegir almenys un producte.',
-        ]);
+            'productes.*.quantitat' => 'required|integer|min:1|max:100',
+        ],
+        [
+            'nom.unique' => 'Ja tens una llista amb aquest nom.',
+            'productes.*.quantitat.max' => 'La quantitat màxima permesa és de 100 unitats.',
+        ]
+    );
 
-
-        // Creació de la llista
-        $llista = Llista::create([
-            'nom'       => $validatedData['nom'],
+    $llista = Llista::create(
+        [
+            'nom'       => $validated['nom'],
             'usuari_id' => Auth::id(),
-        ]);
+        ]
+    );
 
-        $syncData = [];
-        foreach ($validatedData['productes'] as $producte) {
-            // Construïm l'array de dades pivot
-            $syncData[$producte['id']] = [
-                'quantitat' => $producte['quantitat'],
-                'comprat' => false,
-            ];
-        }
-
-        // Utilitzem sync() per a una associació inicial més neta
-        $llista->productes()->sync($syncData);
-
-        return redirect()->route('llistes.index')
-            ->with('success', '✅ Llista "' . $llista->nom . '" creada amb èxit!');
+    if (!empty($validated['productes'])) {
+        $llista->productes()->sync($this->productesPerSync($validated['productes']));
     }
+
+    return redirect()->route('llistes.show', $llista->id)
+        ->with('success', '✅ Llista "' . $llista->nom . '" creada amb èxit!');
+}
 
 
 
     /**
      * Display the specified resource.
      */
-    public function show(string $id) // Rep l'ID com a string
+    public function show(string $id)
     {
         $llista = Llista::findOrFail($id);
-        // Crida LlistaPolicy::view(). Això comprova:
-        // a) Si és l'Owner (via before()).
-        // b) Si té qualsevol rol compartit (viewer, editor, admin).
         $this->authorize('view', $llista);
 
-        $llista->load('productes.categoria');
-
-        // Agrupar productes per categoria
-        $productesPerCategoria = $llista->productes->groupBy(function ($producte) {
-            return $producte->categoria->nom ?? 'Sense categoria';
-        });
-
-        // Convertim a array i el partim en dues columnes
-        $categoriesArray = $productesPerCategoria->toArray();
-        $midpoint = ceil(count($categoriesArray) / 2);
-
-        $columna1 = array_slice($categoriesArray, 0, $midpoint, true);
-        $columna2 = array_slice($categoriesArray, $midpoint, null, true);
-
-        $hasTwoColumns = count($columna2) > 0;
-
-        return view('llistes.show', compact('llista', 'columna1', 'columna2', 'hasTwoColumns'));
+        return view('llistes.list', $this->dadesVista($llista));
     }
 
 
@@ -136,14 +115,9 @@ class LlistaController extends Controller
      * Show the form for editing the specified resource.
      */
 
-    // Editar el nombre de una lista
     public function edit(string $id)
     {
-        $llista = Llista::with('productes')->findOrFail($id);
-
-        $this->authorize('update', $llista);
-
-        return view('llistes.edit', compact('llista'));
+        return redirect()->route('llistes.show', $id);
     }
 
     /**
@@ -151,33 +125,40 @@ class LlistaController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        $llista = Llista::with('productes')->findOrFail($id);
+        $llista = Llista::findOrFail($id);
 
         $this->authorize('update', $llista);
 
-        $validated = $request->validate([
-            'nom' => 'required|string|max:255|unique:llistes,nom,' . $id,
-            'productes' => 'required|array|min:1',
+        $validated = $request->validate(
+            [
+            'nom' => [
+                'required', 'string', 'max:255',
+                Rule::unique('llistes', 'nom')
+                    ->where('usuari_id', $llista->usuari_id)
+                    ->ignore($llista->id),
+            ],
+            'productes' => 'nullable|array',
             'productes.*.id' => 'required|exists:productes,id',
             'productes.*.quantitat' => 'required|integer|min:1|max:100',
-        ], [
+            ],
+            [
             'nom.required' => 'Has d’introduir un nom per a la llista.',
-            'nom.unique' => 'Ja existeix una llista amb aquest nom.',
-            'productes.required' => 'Has d’afegir almenys un producte.',
+            'nom.unique' => 'El propietari ja té una llista amb aquest nom.',
             'productes.*.quantitat.max' => 'La quantitat màxima permesa és de 100 unitats.',
-        ]);
+            ]
+        );
 
-        $llista->update([
-            'nom' => $validated['nom'],
-        ]);
-
-        $syncData = [];
-        foreach ($validated['productes'] as $producte) {
-            $syncData[$producte['id']] = ['quantitat' => $producte['quantitat']];
-        }
-        $llista->productes()->sync($syncData);
-
-        return redirect()->route('llistes.index')->with('success', 'Llista actualitzada correctament.');
+        $llista->update(
+            [
+                'nom' => $validated['nom']
+            ]
+        );
+        $llista->productes()->sync(
+            $this->productesPerSync(
+                $validated['productes'] ?? []
+            )
+        );
+        return redirect()->route('llistes.show', $llista->id)->with('success', 'Llista actualitzada correctament.');
     }
 
 
@@ -273,5 +254,30 @@ class LlistaController extends Controller
 
         // Retornar en format json
         return response()->json($usuaris);
+    }
+    private function dadesVista(Llista $llista): array
+    {
+        $productes = $llista->exists
+            ? $llista->load('productes.categoria')->productes
+            : collect();
+
+        $perCategoria = $productes->groupBy(
+            fn ($producte) => $producte->categoria->nom ?? 'Sense categoria'
+        )->toArray();
+
+        $midpoint = ceil(count($perCategoria) / 2);
+        $columna1 = array_slice($perCategoria, 0, $midpoint, true);
+        $columna2 = array_slice($perCategoria, $midpoint, null, true);
+        $hasTwoColumns = count($columna2) > 0;
+
+        return compact('llista', 'columna1', 'columna2', 'hasTwoColumns');
+    }
+    private function productesPerSync(array $productes): array
+    {
+        $syncData = [];
+        foreach ($productes as $producte) {
+            $syncData[$producte['id']] = ['quantitat' => $producte['quantitat']];
+        }
+        return $syncData;
     }
 }

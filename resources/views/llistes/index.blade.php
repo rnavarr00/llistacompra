@@ -10,6 +10,18 @@
         <h2 class="titol-dash text-primary fw-bold">
             Les meves llistes
         </h2>
+        <div class="flex-grow-1 mx-4">
+            <input
+                type="text"
+                class="form-control"
+                id="listName"
+                name="nom"
+                placeholder="Introdueix el nom de la llista"
+                required
+                pattern=".*\S.*"
+                title="El nom de la llista no pot estar buit ni tenir només espais.">
+        </div>
+
         <a href="{{ route('llistes.create') }}"
             class="btn btn-primary btn-lg px-4 d-flex align-items-center justify-content-center shadow-sm">
             <i class="bi bi-plus-lg fs-3"></i>
@@ -52,7 +64,9 @@
                         @endcan
 
                         @if(Gate::check('update', $llista) || Gate::check('share', $llista))
-                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
                         @endif
 
                         @can('delete', $llista)
@@ -75,7 +89,7 @@
                     </div>
                     <h5 class="card-title mb-0 text-capitalize">{{ $llista->nom }}</h5>
                     @if($llista->es_compartida)
-                        <small class="text-muted mt-2">Compartida amb tu</small>
+                    <small class="text-muted mt-2">Compartida amb tu</small>
                     @endif
                 </div>
             </div>
@@ -113,8 +127,15 @@
         }
 
         @keyframes dashFade {
-            from { opacity: 0; transform: translateY(18px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(18px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
     </style>
 
