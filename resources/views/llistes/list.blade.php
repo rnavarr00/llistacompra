@@ -1,10 +1,9 @@
 @extends('layouts.master')
-@section('title', $llista->exists ? $llista->nom : 'Crear llista')
+@section('title', $llista->nom )
 @section('content') 
 
 @php
-    $esNova    = !$llista->exists;
-    $potEditar = $esNova || auth()->user()->can('update', $llista);
+    $potEditar =auth()->user()->can('update', $llista);
     $i = 0; // índex dels inputs productes[i][...]
 @endphp
 
@@ -20,16 +19,14 @@
         </div>
     @endif
 
-    <form id="llistaForm" method="POST"
-          action="{{ $esNova ? route('llistes.store') : route('llistes.update', $llista->id) }}">
+    <form id="llistaForm" method="POST" action="{{ route('llistes.update', $llista->id) }}">
         @csrf
-        @unless ($esNova) @method('PUT') @endunless
+        @method('PUT')
 
         {{-- Capçalera --}}
         <div class="d-flex justify-content-between align-items-center mb-4 gap-3">
             <div class="d-flex align-items-center flex-grow-1">
                 <i class="{{ $llista->icona ?? 'bi bi-list-check' }} text-primary fs-2 me-3"></i>
-
                 @if ($potEditar)
                     <input type="text" name="nom" id="listName"
                         class="form-control form-control-lg fw-bold text-primary @error('nom') is-invalid @enderror"
@@ -38,8 +35,7 @@
                         required pattern=".*\S.*"
                         title="El nom de la llista no pot estar buit ni tenir només espais.">
                 @else
-                    <h2 class="fw-bold text-primary mb-0" style="font-size:1.7rem;">
-                        {{ ucfirst($llista->nom) }}
+                    <h2 class="fw-bold text-primary mb-0" style="font-size:1.7rem;">{{($llista->nom) }}
                     </h2>
                 @endif
             </div>
@@ -190,7 +186,7 @@
         @if ($potEditar)
         <div class="mt-4">
             <button type="submit" class="btn btn-success">
-                <i class="bi bi-save"></i> {{ $esNova ? 'Guardar llista' : 'Desar canvis' }}
+                <i class="bi bi-save"></i>Desar canvis
             </button>
         </div>
         @endif

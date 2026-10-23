@@ -14,6 +14,7 @@ use App\Support\ColorLlista;
 class LlistaController extends Controller
 {
     use AuthorizesRequests, ValidatesRequests;
+
     /**
      * Mètode de suport: Obté les llistes creades per l'usuari actual (Owner).
      * @param User $user
@@ -51,60 +52,43 @@ class LlistaController extends Controller
         return view('llistes.index', compact('llistes'));
     }
 
-
-    /**
-     * Show the form for creating a new resource.
-     */
-
-    // Crear una lista
-    public function create()
-    {
-        return view('llistes.list', $this->dadesVista(new Llista()));
-    }
-
     /**
      * Store a newly created resource in storage.
      */
     public function store(Request $request)
-{
-    $validated = $request->validate(
-        [
-            'nom' => [
-                'required', 'string', 'max:255',
-                Rule::unique('llistes', 'nom')->where('usuari_id', Auth::id()),
+    {
+        $validated = $request->validate(
+            [
+                'nom' => [
+                    'required', 'string', 'max:255',
+                    Rule::unique('llistes', 'nom')->where('usuari_id', Auth::id()),
+                ],
+                'color' => [
+                    'nullable',
+                    'string',
+                    Rule::in(array_keys(ColorLlista::PALETA)),
+                ],
             ],
-            'color' => [
-            'nullable',
-            'string',
-                Rule::in(array_keys(ColorLlista::PALETA)),
-            ],
-            'productes' => 'nullable|array',
-            'productes.*.id' => 'required|exists:productes,id',
-            'productes.*.quantitat' => 'required|integer|min:1|max:100',
-        ],
-        [
-            'nom.unique' => 'Ja tens una llista amb aquest nom.',
-            'productes.*.quantitat.max' => 'La quantitat màxima permesa és de 100 unitats.',
-        ]
-    );
+            [
+                'nom.required' => 'Has d’introduir un nom per a la llista.',
+                'nom.unique'   => 'Ja tens una llista amb aquest nom.',
+                'nom.max'      => 'El nom no pot passar de 255 caràcters.',
+            ]
+        );
 
-    $llista = Llista::create(
-        [
-            'nom'       => $validated['nom'],
-            'usuari_id' => Auth::id(),
-            'color'     => $validated['color'] ?? null,
-        ]
-    );
+        $llista = Llista::create(
+            [
+                'nom'       => trim($validated['nom']),
+                'usuari_id' => Auth::id(),
+                'color'     => $validated['color'] ?? null,
+            ]
+        );
 
-    if (!empty($validated['productes'])) {
-        $llista->productes()->sync($this->productesPerSync($validated['productes']));
+        return response()->json(
+            ['redirect' => route('llistes.show', $llista->id)],
+            201
+        );
     }
-
-    return redirect()->route('llistes.show', $llista->id)
-        ->with('success', '✅ Llista "' . $llista->nom . '" creada amb èxit!');
-}
-
-
 
     /**
      * Display the specified resource.
@@ -117,11 +101,9 @@ class LlistaController extends Controller
         return view('llistes.list', $this->dadesVista($llista));
     }
 
-
     /**
      * Show the form for editing the specified resource.
      */
-
     public function edit(string $id)
     {
         return redirect()->route('llistes.show', $id);
@@ -138,25 +120,25 @@ class LlistaController extends Controller
 
         $validated = $request->validate(
             [
-            'nom' => [
-                'required', 'string', 'max:255',
-                Rule::unique('llistes', 'nom')
-                    ->where('usuari_id', $llista->usuari_id)
-                    ->ignore($llista->id),
-            ],
-            'color' => [
-                'nullable',
-                'string',
-                Rule::in(array_keys(ColorLlista::PALETA)),
-            ],
-            'productes' => 'nullable|array',
-            'productes.*.id' => 'required|exists:productes,id',
-            'productes.*.quantitat' => 'required|integer|min:1|max:100',
+                'nom' => [
+                    'required', 'string', 'max:255',
+                    Rule::unique('llistes', 'nom')
+                        ->where('usuari_id', $llista->usuari_id)
+                        ->ignore($llista->id),
+                ],
+                'color' => [
+                    'nullable',
+                    'string',
+                    Rule::in(array_keys(ColorLlista::PALETA)),
+                ],
+                'productes' => 'nullable|array',
+                'productes.*.id' => 'required|exists:productes,id',
+                'productes.*.quantitat' => 'required|integer|min:1|max:100',
             ],
             [
-            'nom.required' => 'Has d’introduir un nom per a la llista.',
-            'nom.unique' => 'El propietari ja té una llista amb aquest nom.',
-            'productes.*.quantitat.max' => 'La quantitat màxima permesa és de 100 unitats.',
+                'nom.required' => 'Has d’introduir un nom per a la llista.',
+                'nom.unique' => 'El propietari ja té una llista amb aquest nom.',
+                'productes.*.quantitat.max' => 'La quantitat màxima permesa és de 100 unitats.',
             ]
         );
 
@@ -170,9 +152,10 @@ class LlistaController extends Controller
                 $validated['productes'] ?? []
             )
         );
-        return redirect()->route('llistes.show', $llista->id)->with('success', 'Llista actualitzada correctament.');
-    }
 
+        return redirect()->route('llistes.show', $llista->id)
+            ->with('success', 'Llista actualitzada correctament.');
+    }
 
     /**
      * Remove the specified resource from storage.
@@ -267,6 +250,7 @@ class LlistaController extends Controller
         // Retornar en format json
         return response()->json($usuaris);
     }
+
     private function dadesVista(Llista $llista): array
     {
         $productes = $llista->exists
@@ -285,13 +269,14 @@ class LlistaController extends Controller
         $colors = ColorLlista::PALETA;
 
         return compact(
-            'llista', 
-            'columna1', 
-            'columna2', 
+            'llista',
+            'columna1',
+            'columna2',
             'hasTwoColumns',
             'colors'
-            );
+        );
     }
+
     private function productesPerSync(array $productes): array
     {
         $syncData = [];

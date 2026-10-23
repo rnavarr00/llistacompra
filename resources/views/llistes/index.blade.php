@@ -25,12 +25,14 @@
                 title="El nom de la llista no pot estar buit ni tenir només espais.">
         </div>
 
-        <a href="{{ route('llistes.create') }}"
-           class="btn btn-primary btn-lg boto-crear d-flex align-items-center justify-content-center shadow-sm"
-           aria-label="Crear una llista"
-           title="Crear una llista">
+        <button type="button" id="btnCrear"
+                data-url="{{ route('llistes.store') }}"
+                data-token="{{ csrf_token() }}"
+                class="btn btn-primary btn-lg boto-crear d-flex align-items-center justify-content-center shadow-sm"
+                aria-label="Crear una llista"
+                title="Crear una llista">
             <i class="bi bi-plus-lg fs-3"></i>
-        </a>
+        </button>
 
     </div>
 
@@ -73,7 +75,7 @@
                                 <i class="{{ $llista->icona ?? 'bi bi-list-check' }}"></i>
                             </div>
 
-                            <h5 class="card-title mb-0 text-capitalize">
+                            <h5 class="card-title mb-0">
                                 {{ $llista->nom }}
                             </h5>
 
@@ -293,7 +295,7 @@
             gap: 8px;
         }
 
-        /* Botones grandes, solo con iconos */
+        /* Botons grans, només amb icones */
         .action-btn {
             width: 44px;
             height: 44px;
@@ -309,7 +311,7 @@
             margin: 0 !important;
         }
 
-        /* Ocultar el texto de los botones en móvil */
+        /* Amagar el text dels botons en mòbil */
         .action-label {
             display: none;
         }
@@ -334,5 +336,63 @@
         }
     }
 </style>
+
+<script>
+const btnCrear = document.getElementById('btnCrear');
+
+btnCrear.addEventListener('click', async () => {
+    const url = btnCrear.dataset.url;
+    const token = btnCrear.dataset.token;
+
+    let valor = '';
+    let missatge = 'Nom de la nova llista:';
+
+    while (true) {
+        const resposta = prompt(missatge, valor);
+
+        // Cancel·lar: no fem res, ens quedem a l'index
+        if (resposta === null) return;
+
+        valor = resposta.trim();
+
+        if (valor === '') {
+            missatge = 'El nom no pot estar buit.\n\nNom de la nova llista:';
+            continue;
+        }
+        if (valor.length > 255) {
+            missatge = 'El nom és massa llarg (màxim 255 caràcters).\n\nNom de la nova llista:';
+            continue;
+        }
+
+        try {
+            const res = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': token
+                },
+                body: JSON.stringify({ nom: valor })
+            });
+            const data = await res.json();
+
+            if (res.ok) {
+                window.location.href = data.redirect;
+                return;
+            }
+
+            if (res.status === 422) {
+                missatge = (data.errors?.nom?.[0] ?? 'Nom no vàlid.') + '\n\nNom de la nova llista:';
+                continue;
+            }
+
+            throw new Error();
+        } catch {
+            alert('No s\'ha pogut crear la llista. Torna-ho a provar.');
+            return;
+        }
+    }
+});
+</script>
 
 @endsection
