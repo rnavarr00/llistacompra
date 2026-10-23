@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('nom');
             $table->foreignId('usuari_id')->constrained('users')->onDelete('cascade');
+            $table->string('color', 7)->nullable()->default(null);
             $table->timestamps();
         });
     }

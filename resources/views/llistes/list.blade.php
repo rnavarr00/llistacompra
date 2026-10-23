@@ -29,21 +29,73 @@
         <div class="d-flex justify-content-between align-items-center mb-4 gap-3">
             <div class="d-flex align-items-center flex-grow-1">
                 <i class="{{ $llista->icona ?? 'bi bi-list-check' }} text-primary fs-2 me-3"></i>
+
                 @if ($potEditar)
                     <input type="text" name="nom" id="listName"
-                           class="form-control form-control-lg fw-bold text-primary @error('nom') is-invalid @enderror"
-                           value="{{ old('nom', $llista->nom) }}"
-                           placeholder="Introdueix el nom de la llista"
-                           required pattern=".*\S.*"
-                           title="El nom de la llista no pot estar buit ni tenir només espais.">
+                        class="form-control form-control-lg fw-bold text-primary @error('nom') is-invalid @enderror"
+                        value="{{ old('nom', $llista->nom) }}"
+                        placeholder="Introdueix el nom de la llista"
+                        required pattern=".*\S.*"
+                        title="El nom de la llista no pot estar buit ni tenir només espais.">
                 @else
-                    <h2 class="fw-bold text-primary mb-0" style="font-size:1.7rem;">{{ ucfirst($llista->nom) }}</h2>
+                    <h2 class="fw-bold text-primary mb-0" style="font-size:1.7rem;">
+                        {{ ucfirst($llista->nom) }}
+                    </h2>
                 @endif
             </div>
-            <a href="{{ route('llistes.index') }}" class="btn btn-outline-primary d-flex align-items-center">
+
+            <a href="{{ route('llistes.index') }}"
+            class="btn btn-outline-primary d-flex align-items-center">
                 <i class="bi bi-arrow-left me-2"></i> Tornar
             </a>
         </div>
+
+        {{-- Selector de color de la llista --}}
+        @if ($potEditar)
+            <div class="mb-4">
+                <label class="form-label fw-semibold">
+                    <i class="bi bi-palette me-2"></i>Color de la llista
+                </label>
+
+                <div class="selector-colors">
+                    {{-- Sense color --}}
+                    <label class="opcion-color">
+                        <input
+                            type="radio"
+                            name="color"
+                            value=""
+                            {{ old('color', $llista->color ?? '') == '' ? 'checked' : '' }}
+                        >
+                        <span class="muestra-color sin-color" title="Sense color">
+                            <i class="bi bi-slash-circle"></i>
+                        </span>
+                        <span class="nombre-color">Sense color</span>
+                    </label>
+
+                    {{-- Colors de la paleta --}}
+                    @foreach ($colors as $hex => $nombre)
+                        <label class="opcion-color">
+                            <input
+                                type="radio"
+                                name="color"
+                                value="{{ $hex }}"
+                                {{ old('color', $llista->color ?? '') === $hex ? 'checked' : '' }}
+                            >
+                            <span
+                                class="muestra-color"
+                                style="background-color: {{ $hex }};"
+                                title="{{ $nombre }}"
+                            ></span>
+                            <span class="nombre-color">{{ $nombre }}</span>
+                        </label>
+                    @endforeach
+                </div>
+
+                @error('color')
+                    <div class="text-danger small mt-2">{{ $message }}</div>
+                @enderror
+            </div>
+        @endif
 
         {{-- Afegir productes (només si pot editar) --}}
         @if ($potEditar)
@@ -147,6 +199,67 @@
 
 <style>
     .comprat .nom, .comprat .quantitat { text-decoration: line-through; color: #6c757d !important; }
+
+    /* Selector de color de la llista */
+    .selector-colors {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 14px;
+        margin-top: 10px;
+    }
+
+    .opcion-color {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 5px;
+        cursor: pointer;
+        font-size: 0.85rem;
+    }
+
+    .opcion-color input[type="radio"] {
+        position: absolute;
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    .muestra-color {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        border: 2px solid rgba(0, 0, 0, 0.12);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .sin-color {
+        background-color: #ffffff;
+        color: #697586;
+        border: 2px dashed #adb5bd;
+    }
+
+    .opcion-color input:checked + .muestra-color {
+        outline: 3px solid #212529;
+        outline-offset: 3px;
+        transform: scale(1.05);
+    }
+
+    .opcion-color input:focus-visible + .muestra-color {
+        outline: 3px solid #0d6efd;
+        outline-offset: 4px;
+    }
+
+    .nombre-color {
+        color: #495057;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .muestra-color {
+            transition: none;
+        }
+    }
 </style>
 
 <script>
