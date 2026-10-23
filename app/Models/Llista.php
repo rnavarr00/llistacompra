@@ -11,7 +11,8 @@ class Llista extends Model
     protected $fillable = [
         'nom',
         'usuari_id',
-        'productes_llistes'
+        'productes_llistes',
+        'color',
     ];
 
     public function owner()

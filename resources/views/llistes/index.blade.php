@@ -42,7 +42,13 @@
             <div class="col-12 col-sm-6 col-md-4">
 
                 <div class="card h-100 text-center shadow-sm border-0 list-card
-                    {{ $llista->es_compartida ? 'shared-bg' : '' }}">
+                    {{ $llista->es_compartida ? 'shared-bg' : '' }}"
+                    style="
+                        border-left: 5px solid {{ $llista->color ?? '#dee2e6' }} !important;
+                        background-color: {{ $llista->color
+                            ? $llista->color . '18'
+                            : ($llista->es_compartida ? '#f8f9fa' : '#ffffff') }};
+                    ">
 
                     {{-- DISTINTIU DE LLISTA COMPARTIDA --}}
                     @if ($llista->es_compartida)

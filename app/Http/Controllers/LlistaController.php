@@ -9,6 +9,7 @@ use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use App\Support\ColorLlista;
 
 class LlistaController extends Controller
 {
@@ -72,6 +73,11 @@ class LlistaController extends Controller
                 'required', 'string', 'max:255',
                 Rule::unique('llistes', 'nom')->where('usuari_id', Auth::id()),
             ],
+            'color' => [
+            'nullable',
+            'string',
+                Rule::in(array_keys(ColorLlista::PALETA)),
+            ],
             'productes' => 'nullable|array',
             'productes.*.id' => 'required|exists:productes,id',
             'productes.*.quantitat' => 'required|integer|min:1|max:100',
@@ -86,6 +92,7 @@ class LlistaController extends Controller
         [
             'nom'       => $validated['nom'],
             'usuari_id' => Auth::id(),
+            'color'     => $validated['color'] ?? null,
         ]
     );
 
@@ -137,6 +144,11 @@ class LlistaController extends Controller
                     ->where('usuari_id', $llista->usuari_id)
                     ->ignore($llista->id),
             ],
+            'color' => [
+                'nullable',
+                'string',
+                Rule::in(array_keys(ColorLlista::PALETA)),
+            ],
             'productes' => 'nullable|array',
             'productes.*.id' => 'required|exists:productes,id',
             'productes.*.quantitat' => 'required|integer|min:1|max:100',
@@ -148,11 +160,11 @@ class LlistaController extends Controller
             ]
         );
 
-        $llista->update(
-            [
-                'nom' => $validated['nom']
-            ]
-        );
+        $llista->update([
+            'nom'   => $validated['nom'],
+            'color' => $validated['color'] ?? null,
+        ]);
+
         $llista->productes()->sync(
             $this->productesPerSync(
                 $validated['productes'] ?? []
@@ -270,7 +282,15 @@ class LlistaController extends Controller
         $columna2 = array_slice($perCategoria, $midpoint, null, true);
         $hasTwoColumns = count($columna2) > 0;
 
-        return compact('llista', 'columna1', 'columna2', 'hasTwoColumns');
+        $colors = ColorLlista::PALETA;
+
+        return compact(
+            'llista', 
+            'columna1', 
+            'columna2', 
+            'hasTwoColumns',
+            'colors'
+            );
     }
     private function productesPerSync(array $productes): array
     {
