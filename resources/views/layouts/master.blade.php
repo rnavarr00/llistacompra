@@ -308,8 +308,8 @@
                 <p class="mb-0">
                     © {{ date('Y') }} <span class="footer-brand">LlistApp</span> 
                     <span class="footer-separator">·</span>
-                    Creat amb <span class="footer-heart">♥</span> per 
-                    <span class="footer-author">Rebeca</span> i 
+                    Creat per 
+                    <span class="footer-author">Miquel</span> i 
                     <span class="footer-author">Raúl</span>
                     <span class="footer-separator">·</span>
                     Institut Baix Camp

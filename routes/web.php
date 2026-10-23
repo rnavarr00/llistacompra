@@ -44,8 +44,8 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-    // Rutes de llistes (totes les accions: index, create, show, edit, etc.)
-    Route::resource('llistes', LlistaController::class);
+    // Rutes de llistes (totes les accions: index, show, edit, etc.) create ja no cal, ara creem la bd desde el prompt
+Route::resource('llistes', LlistaController::class)->except('create');
 
     // 1. Ruta per mostrar el formulari de compartició (GET)
     Route::get('llistes/{id}/share', [LlistaController::class, 'share'])
