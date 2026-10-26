@@ -45,8 +45,16 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     // Rutes de llistes (totes les accions: index, show, edit, etc.) create ja no cal, ara creem la bd desde el prompt
-Route::resource('llistes', LlistaController::class)->except('create');
+    Route::resource('llistes', LlistaController::class)->except('create');
 
+    // Canvi de color de la llista (AJAX)
+    Route::patch('llistes/{id}/color', [LlistaController::class, 'actualitzarColor'])
+        ->name('llistes.color');
+
+         // Eliminar un producte de la llista (AJAX)
+    Route::delete('llistes/{llista_id}/productes/{producte_id}', [LlistaController::class, 'eliminarProducte'])
+        ->name('llistes.productes.eliminar');
+        
     // 1. Ruta per mostrar el formulari de compartició (GET)
     Route::get('llistes/{id}/share', [LlistaController::class, 'share'])
         ->name('llistes.share');
@@ -61,7 +69,7 @@ Route::resource('llistes', LlistaController::class)->except('create');
 
     // Cerca usuaris per nom o correu electrònic en format JSON.
     Route::get('/usuaris/search', [LlistaController::class, 'searchUsers'])->name('usuaris.search');
-    });
+});
 
 
 // VISTES ADMIN

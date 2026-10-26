@@ -156,6 +156,29 @@ class LlistaController extends Controller
         return redirect()->route('llistes.show', $llista->id)
             ->with('success', 'Llista actualitzada correctament.');
     }
+    public function actualitzarColor(Request $request, string $id)
+    {
+        $llista = Llista::findOrFail($id);
+        $this->authorize('update', $llista);
+
+        $validated = $request->validate([
+            'color' => ['nullable', 'string', Rule::in(array_keys(ColorLlista::PALETA))],
+        ]);
+
+        $llista->update(['color' => $validated['color'] ?? null]);
+
+        return response()->json(['ok' => true]);
+    }
+
+    public function eliminarProducte(string $llista_id, string $producte_id)
+    {
+        $llista = Llista::findOrFail($llista_id);
+        $this->authorize('update', $llista);
+
+        $llista->productes()->detach($producte_id);
+
+        return response()->json(['ok' => true]);
+    }
 
     /**
      * Remove the specified resource from storage.

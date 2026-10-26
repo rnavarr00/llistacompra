@@ -7,8 +7,9 @@
     $i = 0; // índex dels inputs productes[i][...]
 @endphp
 
-<div class="container my-5">
-
+<div class="container my-5 p-4 rounded-4" id="fonsLlista"
+     style="background-color: {{ $llista->color ? $llista->color . '18' : 'transparent' }};
+            transition: background-color 0.25s ease;">
     @if ($errors->any())
         <div class="alert alert-danger">
             <ul class="mb-0">
@@ -19,7 +20,7 @@
         </div>
     @endif
 
-    <form id="llistaForm" method="POST" action="{{ route('llistes.update', $llista->id) }}">
+    <form id="llistaForm" method="POST" action="{{ route('llistes.update', $llista->id) }}" data-color-url="{{ route('llistes.color', $llista->id) }}">
         @csrf
         @method('PUT')
 
@@ -142,7 +143,8 @@
                                             @foreach ($productes as $producte)
                                             @php $comprat = $producte['pivot']['comprat']; @endphp
                                             <li class="list-group-item py-3 px-2 d-flex align-items-center border-0 border-bottom producte-row {{ $comprat ? 'comprat' : '' }}"
-                                            data-id="{{ $producte['id'] }}">
+                                            data-id="{{ $producte['id'] }}"
+                                            data-delete-url="{{ route('llistes.productes.eliminar', ['llista_id' => $llista->id, 'producte_id' => $producte['id']]) }}">
 
                                             <input type="checkbox" class="form-check-input me-3 fs-5 toggle-comprat"
                                                 data-url="{{ route('productes.toggle', ['llista_id' => $llista->id, 'producte_id' => $producte['id']]) }}"
@@ -286,6 +288,44 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // ---------- Canvi de color (AJAX) ----------
+    const radiosColor = document.querySelectorAll('input[name="color"]');
+    if (radiosColor.length) {
+        const urlColor = document.getElementById('llistaForm').dataset.colorUrl;
+        const fons = document.getElementById('fonsLlista');
+        let colorGuardat = document.querySelector('input[name="color"]:checked')?.value ?? '';
+
+        // Pinta el fons amb el color (o el treu si és "Sense color")
+        const pintaFons = (hex) => {
+            fons.style.backgroundColor = hex ? hex + '18' : 'transparent';
+        };
+
+        radiosColor.forEach(radio => radio.addEventListener('change', async () => {
+            const nou = radio.value;
+
+            pintaFons(nou); // el fons canvia a l'instant, sense esperar el servidor
+
+            try {
+                const res = await fetch(urlColor, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': csrf
+                    },
+                    body: JSON.stringify({ color: nou === '' ? null : nou })
+                });
+                if (!res.ok) throw new Error();
+                colorGuardat = nou;
+            } catch {
+                // Si falla, tornem al color anterior (selector i fons)
+                [...radiosColor].find(r => r.value === colorGuardat).checked = true;
+                pintaFons(colorGuardat);
+                alert('No s\'ha pogut canviar el color.');
+            }
+        }));
+    }
+    
     // La resta només existeix si l'usuari pot editar
     const cercador = document.getElementById('cercador-productes');
     if (!cercador) return;
@@ -389,12 +429,40 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // ---------- Eliminar producte ----------
-    document.addEventListener('click', (e) => {
+    document.addEventListener('click', async (e) => {
         const btn = e.target.closest('.eliminar-producte');
         if (!btn) return;
         const row = btn.closest('.producte-row');
+
+        const nomProducte = row.querySelector('.nom').textContent.trim();
+        if (!confirm(`Segur que vols eliminar "${nomProducte}" de la llista?`)) return;
+
+        // Producte ja desat a la BD: l'esborrem al servidor
+        if (row.dataset.deleteUrl) {
+            btn.disabled = true;
+            try {
+                const res = await fetch(row.dataset.deleteUrl, {
+                    method: 'DELETE',
+                    headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': csrf }
+                });
+                if (!res.ok) throw new Error();
+            } catch {
+                btn.disabled = false;
+                alert('No s\'ha pogut eliminar el producte.');
+                return;
+            }
+        }
+
         afegits.delete(row.dataset.id);
+
+        // Si la categoria es queda buida, traiem també el títol i la llista
+        const ul = row.closest('ul');
         row.remove();
+        if (ul && ul.id !== 'nousProductes' && !ul.querySelector('.producte-row')) {
+            ul.previousElementSibling?.remove(); // l'<h5> de la categoria
+            ul.remove();
+        }
+
         if (!nousUl.children.length) nousCard.classList.add('d-none');
     });
 });
