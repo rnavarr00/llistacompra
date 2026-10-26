@@ -145,7 +145,7 @@
             position: relative;
             z-index: 1;
             min-height: calc(100vh - 200px);
-            padding: 48px 0;
+            padding: 8px 0;
         }
 
         .main-wrapper .container {

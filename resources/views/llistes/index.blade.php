@@ -7,7 +7,7 @@
 <div class="container">
 
     {{-- CAPÇALERA --}}
-    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 my-4">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mt-1 mb-4">
 
         <h2 class="titol-dash text-primary fw-bold mb-0">
             Les meves llistes
