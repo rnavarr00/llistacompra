@@ -71,10 +71,6 @@
 
                         <div class="card-body d-flex flex-column justify-content-center align-items-center">
 
-                            <div class="fs-1 mb-3 text-secondary">
-                                <i class="{{ $llista->icona ?? 'bi bi-list-check' }}"></i>
-                            </div>
-
                             <h5 class="card-title mb-0">
                                 {{ $llista->nom }}
                             </h5>
@@ -155,7 +151,7 @@
     .list-card {
         position: relative;
         border-radius: 16px;
-        padding-top: 58px;
+        padding-top: 42px;
         overflow: hidden;
         transition: box-shadow 0.2s ease-in-out,
                     transform 0.2s ease-in-out;
@@ -173,7 +169,7 @@
         flex-direction: column;
         justify-content: center;
         min-width: 0;
-        padding: 0.75rem 1rem 1rem;
+        padding: 0.4rem 0.75rem 0.6rem;
         color: inherit;
         text-decoration: none;
     }
@@ -285,7 +281,7 @@
         }
 
         .list-card {
-            padding-top: 58px;
+            padding-top: 42px;
         }
 
         .card-actions {
