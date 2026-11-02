@@ -45,13 +45,25 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     // Rutes de llistes (totes les accions: index, show, edit, etc.) create ja no cal, ara creem la bd desde el prompt
-    Route::resource('llistes', LlistaController::class)->except('create');
+    Route::resource('llistes', LlistaController::class)->except('create', 'update');
+    
+    // Canvi de nom (AJAX)
+    Route::patch('llistes/{id}/nom', [LlistaController::class, 'actualitzarNom'])
+        ->name('llistes.nom');
 
     // Canvi de color de la llista (AJAX)
     Route::patch('llistes/{id}/color', [LlistaController::class, 'actualitzarColor'])
         ->name('llistes.color');
 
-         // Eliminar un producte de la llista (AJAX)
+    // Afegir un producte a la llista (AJAX)
+    Route::post('llistes/{id}/productes', [LlistaController::class, 'afegirProducte'])
+        ->name('llistes.productes.afegir');
+
+    // Canvi de quantitat d'un producte (AJAX)
+    Route::patch('llistes/{llista_id}/productes/{producte_id}/quantitat', [LlistaController::class, 'actualitzarQuantitat'])
+        ->name('llistes.productes.quantitat');
+        
+    // Eliminar un producte de la llista (AJAX)
     Route::delete('llistes/{llista_id}/productes/{producte_id}', [LlistaController::class, 'eliminarProducte'])
         ->name('llistes.productes.eliminar');
         
