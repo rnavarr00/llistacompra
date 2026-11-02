@@ -41,9 +41,6 @@
     {{-- Selector de color de la llista --}}
     @if ($potEditar)
         <div class="mb-4">
-            <label class="form-label fw-semibold">
-                <i class="bi bi-palette me-2"></i>Color de la llista
-            </label>
 
             <div class="selector-colors">
                 <label class="opcio-color">
@@ -52,7 +49,6 @@
                     <span class="mostra-color sin-color" title="Sense color">
                         <i class="bi bi-slash-circle"></i>
                     </span>
-                    <span class="nombre-color">Sense color</span>
                 </label>
 
                 @foreach ($colors as $hex => $nombre)
@@ -60,7 +56,6 @@
                         <input type="radio" name="color" value="{{ $hex }}"
                             {{ old('color', $llista->color ?? '') === $hex ? 'checked' : '' }}>
                         <span class="mostra-color" style="background-color: {{ $hex }};" title="{{ $nombre }}"></span>
-                        <span class="nombre-color">{{ $nombre }}</span>
                     </label>
                 @endforeach
             </div>
