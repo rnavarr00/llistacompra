@@ -6,7 +6,7 @@
     $potEditar = auth()->user()->can('update', $llista);
 @endphp
 
-<div class="container my-5 p-4 rounded-4" id="fonsLlista"
+<div class="container my-2 p-4 rounded-4" id="fonsLlista"
      data-csrf="{{ csrf_token() }}"
      data-nom-url="{{ route('llistes.nom', $llista->id) }}"
      data-color-url="{{ route('llistes.color', $llista->id) }}"
@@ -17,7 +17,6 @@
     {{-- Capçalera --}}
     <div class="d-flex justify-content-between align-items-center mb-4 gap-3">
         <div class="d-flex align-items-center flex-grow-1">
-            <i class="{{ $llista->icona ?? 'bi bi-list-check' }} text-primary fs-2 me-3"></i>
             @if ($potEditar)
                 <input type="text" name="nom" id="listName"
                     class="form-control form-control-lg fw-bold text-primary @error('nom') is-invalid @enderror"
