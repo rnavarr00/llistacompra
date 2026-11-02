@@ -19,12 +19,14 @@
         <div class="d-flex align-items-center flex-grow-1">
             <i class="{{ $llista->icona ?? 'bi bi-list-check' }} text-primary fs-2 me-3"></i>
             @if ($potEditar)
-                <input type="text" id="listName"
-                    class="form-control form-control-lg fw-bold text-primary"
-                    value="{{ $llista->nom }}"
+                <input type="text" name="nom" id="listName"
+                    class="form-control form-control-lg fw-bold text-primary @error('nom') is-invalid @enderror"
+                    value="{{ old('nom', $llista->nom) }}"
                     data-valor="{{ $llista->nom }}"
                     maxlength="255"
-                    placeholder="Introdueix el nom de la llista">
+                    placeholder="Introdueix el nom de la llista"
+                    required pattern=".*\S.*"
+                    title="El nom de la llista no pot estar buit ni tenir només espais.">
             @else
                 <h2 class="fw-bold text-primary mb-0" style="font-size:1.7rem;">{{ $llista->nom }}</h2>
             @endif
@@ -44,24 +46,28 @@
             </label>
 
             <div class="selector-colors">
-                <label class="opcion-color">
+                <label class="opcio-color">
                     <input type="radio" name="color" value=""
-                        {{ ($llista->color ?? '') == '' ? 'checked' : '' }}>
-                    <span class="muestra-color sin-color" title="Sense color">
+                        {{ old('color', $llista->color ?? '') == '' ? 'checked' : '' }}>
+                    <span class="mostra-color sin-color" title="Sense color">
                         <i class="bi bi-slash-circle"></i>
                     </span>
                     <span class="nombre-color">Sense color</span>
                 </label>
 
                 @foreach ($colors as $hex => $nombre)
-                    <label class="opcion-color">
-                        <input type="radio" name="color" value="{{ $hex }}"
-                            {{ ($llista->color ?? '') === $hex ? 'checked' : '' }}>
-                        <span class="muestra-color" style="background-color: {{ $hex }};" title="{{ $nombre }}"></span>
+                    <label class="opcio-color">
+                        <input type="radio" name="color" value="{{ hex }}"
+                            {{ old('color', $llista->color ?? '') === $hex ? 'checked' : '' }}>
+                        <span class="mostra-color" style="background-color: {{ $hex }};" title="{{ $nombre }}"></span>
                         <span class="nombre-color">{{ $nombre }}</span>
                     </label>
                 @endforeach
             </div>
+
+            @error('color')
+                <div class="text-danger small mt-2">{{ $message }}</div>
+            @enderror
         </div>
     @endif
 
@@ -87,6 +93,16 @@
     {{-- Productes, per categories --}}
     <div class="card shadow-sm border-0">
         <div class="card-body p-4">
+
+            @if (count($columna1))
+                <div class="d-flex justify-content-end mb-2">
+                    <button type="button" id="toggle-tots"
+                            class="btn btn-outline-primary btn-sm px-2 py-1">
+                        <i class="bi bi-check2-all me-1"></i>
+                        <span>Marcar tots</span>
+                    </button>
+                </div>
+            @endif
 
             <div id="buit" class="text-center py-5 text-muted {{ count($columna1) ? 'd-none' : '' }}">
                 <i class="bi bi-clipboard-x fs-1 d-block mb-3"></i>
@@ -152,32 +168,70 @@
 </div>
 
 <style>
-    .comprat .nom, .comprat .quantitat { text-decoration: line-through; color: #6c757d !important; }
+    .comprat .nom,
+    .comprat .quantitat {
+        text-decoration: line-through;
+        color: #6c757d !important;
+    }
 
     /* Selector de color de la llista */
     .selector-colors { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 10px; }
-    .opcion-color {
+    .opcio-color {
         display: flex; flex-direction: column; align-items: center;
         gap: 5px; cursor: pointer; font-size: 0.85rem;
     }
-    .opcion-color input[type="radio"] { position: absolute; opacity: 0; pointer-events: none; }
-    .muestra-color {
+    .opcio-color input[type="radio"] { position: absolute; opacity: 0; pointer-events: none; }
+    .mostra-color {
         width: 36px; height: 36px; border-radius: 50%;
         border: 2px solid rgba(0, 0, 0, 0.12);
         display: flex; align-items: center; justify-content: center;
         transition: transform 0.15s ease, box-shadow 0.15s ease;
     }
     .sin-color { background-color: #ffffff; color: #697586; border: 2px dashed #adb5bd; }
-    .opcion-color input:checked + .muestra-color {
+    .opcio-color input:checked + .mostra-color {
         outline: 3px solid #212529; outline-offset: 3px; transform: scale(1.05);
     }
-    .opcion-color input:focus-visible + .muestra-color {
+    .opcio-color input:focus-visible + .mostra-color {
         outline: 3px solid #0d6efd; outline-offset: 4px;
     }
     .nombre-color { color: #495057; }
 
+    /* Adaptació per a pantalles petites */
+    @media (max-width: 576px) {
+        .selector-colors {
+            display: grid;
+            grid-template-columns: repeat(9, minmax(0, 1fr));
+            gap: 4px;
+            width: 100%;
+        }
+
+        .opcio-color {
+            min-width: 0;
+            width: 100%;
+            gap: 4px;
+            font-size: 0.65rem;
+            text-align: center;
+        }
+
+        .mostra-color {
+            width: clamp(20px, 6vw, 32px);
+            height: clamp(20px, 6vw, 32px);
+        }
+
+        .opcio-color input:checked + .mostra-color {
+            outline-offset: 2px;
+        }
+
+        .nombre-color {
+            font-size: 9px;
+            line-height: 1.1;
+            overflow-wrap: anywhere;
+            text-align: center;
+        }
+    }
+
     @media (prefers-reduced-motion: reduce) {
-        .muestra-color { transition: none; }
+        .mostra-color { transition: none; }
     }
 </style>
 
@@ -213,27 +267,94 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => el.classList.remove('is-valid', 'is-invalid'), 1200);
     }
 
-    // ---------- Marcar com a comprat ----------
-    document.addEventListener('change', async (e) => {
-        if (!e.target.classList.contains('toggle-comprat')) return;
-        const checkbox = e.target;
+    // Guarda l'estat d'un producte al servidor (AJAX)
+    async function guardarEstatComprat(checkbox, nouEstat, estatAnterior) {
         const row = checkbox.closest('.producte-row');
-        row.classList.toggle('comprat', checkbox.checked);
+
+        checkbox.checked = nouEstat;
+        row.classList.toggle('comprat', nouEstat);
 
         try {
             const body = new FormData();
             body.append('_method', 'PATCH');
             body.append('_token', csrf);
+
             const res = await fetch(checkbox.dataset.url, {
-                method: 'POST', body, headers: { 'Accept': 'application/json' }
+                method: 'POST',
+                body,
+                headers: { 'Accept': 'application/json' }
             });
+
             if (!res.ok) throw new Error();
+            return true;
         } catch {
-            checkbox.checked = !checkbox.checked;
-            row.classList.toggle('comprat', checkbox.checked);
+            checkbox.checked = estatAnterior;
+            row.classList.toggle('comprat', estatAnterior);
+            return false;
+        }
+    }
+
+    // Actualitza el text del botó segons l'estat dels productes
+    function actualitzarTextTots() {
+        const boton = document.getElementById('toggle-tots');
+        if (!boton) return;
+
+        const checkboxes = [...document.querySelectorAll('.toggle-comprat')];
+        const totsComprats = checkboxes.length > 0 &&
+            checkboxes.every(checkbox => checkbox.checked);
+
+        const span = boton.querySelector('span');
+        if (span) {
+            span.textContent = totsComprats ? 'Desmarcar tots' : 'Marcar tots';
+        }
+    }
+
+    // Canvi individual de compra d'un producte
+    document.addEventListener('change', async (e) => {
+        if (!e.target.classList.contains('toggle-comprat')) return;
+
+        const checkbox = e.target;
+        const nouEstat = checkbox.checked;
+        const estatAnterior = !nouEstat;
+
+        const correcte = await guardarEstatComprat(checkbox, nouEstat, estatAnterior);
+        if (!correcte) {
             alert('No s\'ha pogut actualitzar el producte.');
         }
+
+        actualitzarTextTots();
     });
+
+    // Marcar o desmarcar tots els productes
+    const botoTots = document.getElementById('toggle-tots');
+    if (botoTots) {
+        actualitzarTextTots();
+
+        botoTots.addEventListener('click', async () => {
+            const checkboxes = [...document.querySelectorAll('.toggle-comprat')];
+            if (!checkboxes.length) return;
+
+            const nouEstat = checkboxes.some(checkbox => !checkbox.checked);
+
+            botoTots.disabled = true;
+            checkboxes.forEach(checkbox => checkbox.disabled = true);
+
+            const resultats = await Promise.all(
+                checkboxes
+                    .filter(checkbox => checkbox.checked !== nouEstat)
+                    .map(checkbox => guardarEstatComprat(checkbox, nouEstat, checkbox.checked))
+            );
+
+            checkboxes.forEach(checkbox => checkbox.disabled = false);
+            botoTots.disabled = false;
+
+            actualitzarTextTots();
+
+            if (resultats.some(resultat => !resultat)) {
+                alert('Alguns productes no s\'han pogut actualitzar.');
+            }
+        });
+    }
 
     // La resta només existeix si l'usuari pot editar
     const inputNom = document.getElementById('listName');
@@ -241,7 +362,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ---------- Nom de la llista (change) ----------
     inputNom.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') { e.preventDefault(); inputNom.blur(); } // blur dispara change
+        if (e.key === 'Enter') { e.preventDefault(); inputNom.blur(); }
     });
 
     inputNom.addEventListener('change', async () => {
@@ -261,7 +382,7 @@ document.addEventListener('DOMContentLoaded', () => {
             document.title = data.nom;
             marca(inputNom, true);
         } catch (err) {
-            inputNom.value = inputNom.dataset.valor; // restaurem el nom anterior
+            inputNom.value = inputNom.dataset.valor;
             marca(inputNom, false);
             alert(err.message);
         }
@@ -306,7 +427,7 @@ document.addEventListener('DOMContentLoaded', () => {
             input.dataset.valor = data.quantitat;
             marca(input, true);
         } catch (err) {
-            input.value = input.dataset.valor; // restaurem la quantitat anterior
+            input.value = input.dataset.valor;
             marca(input, false);
             alert(err.message);
         }
@@ -420,7 +541,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (e.key === 'Enter') { e.preventDefault(); btnAfegir.click(); }
     }));
 
-    // ---------- Afegir producte (es desa a la BD a l'instant) ----------
+    // ---------- Afegir producte ----------
     btnAfegir.addEventListener('click', async () => {
         const id = hiddenId.value;
         const nom = cercador.value.trim();
@@ -480,16 +601,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const ul = row.closest('ul');
         row.remove();
 
-        // Si la categoria es queda buida, traiem títol i llista
         if (!ul.querySelector('.producte-row')) {
             const cos = ul.closest('.columna-body');
             ul.previousElementSibling?.remove();
             ul.remove();
-            // Si la columna es queda sense categories, traiem la columna
             if (!cos.querySelector('.categoria-titol')) cos.closest('.columna').remove();
         }
 
-        // Si no queda cap producte, tornem a mostrar el missatge de llista buida
         if (!document.querySelector('.producte-row')) {
             columnes.innerHTML = '';
             buit.classList.remove('d-none');
@@ -497,4 +615,3 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 </script>
-@endsection
