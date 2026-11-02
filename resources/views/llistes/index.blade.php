@@ -9,20 +9,15 @@
     {{-- CAPÇALERA --}}
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mt-1 mb-4">
 
-        <h2 class="titol-dash text-primary fw-bold mb-0">
-            Les meves llistes
-        </h2>
-
         <div class="flex-grow-1 mx-md-4">
             <input
                 type="text"
-                class="form-control"
-                id="listName"
+                class="form-control rounded-4 py-3 px-3 shadow-sm"
+                id="cercadorLlistes"
                 name="nom"
-                placeholder="Introdueix el nom de la llista"
-                required
-                pattern=".*\S.*"
-                title="El nom de la llista no pot estar buit ni tenir només espais.">
+                placeholder="Cerca una llista o escriu-ne una de nova..."
+                autocomplete="off"
+                maxlength="255">
         </div>
 
         <button type="button" id="btnCrear"
@@ -30,18 +25,18 @@
                 data-token="{{ csrf_token() }}"
                 class="btn btn-primary btn-lg boto-crear d-flex align-items-center justify-content-center shadow-sm"
                 aria-label="Crear una llista"
-                title="Crear una llista">
+                title="Crear una llista amb aquest nom">
             <i class="bi bi-plus-lg fs-3"></i>
         </button>
 
     </div>
 
     {{-- LLISTES --}}
-    <div class="row g-4">
+    <div class="row g-4" id="graellaLlistes">
 
         @forelse ($llistes as $llista)
 
-            <div class="col-12 col-sm-6 col-md-4">
+            <div class="col-12 col-sm-6 col-md-4 llista-item" data-nom="{{ strtolower($llista->nom) }}">
 
                 <div class="card h-100 text-center shadow-sm border-0 list-card
                     {{ $llista->es_compartida ? 'shared-bg' : '' }}"
@@ -71,7 +66,7 @@
 
                         <div class="card-body d-flex flex-column justify-content-center align-items-center">
 
-                            <h5 class="card-title mb-0">
+                            <h5 class="card-title mb-0 nom-llista">
                                 {{ $llista->nom }}
                             </h5>
 
@@ -128,14 +123,19 @@
 
         @empty
 
-            <div class="col-12 text-center mt-5">
+            <div class="col-12 text-center mt-5" id="senseLlistesInicial">
                 <p class="text-muted">
-                    Encara no tens cap llista creada.
+                    Encara no tens cap llista creada. Escriu un nom a dalt i prem el botó '+' per crear-ne una!
                 </p>
             </div>
 
         @endforelse
 
+    </div>
+
+    {{-- Missatge quan la cerca no troba res --}}
+    <div id="senseResultats" class="col-12 text-center mt-5 d-none">
+        <p class="text-muted">No s'ha trobat cap llista amb aquest nom.</p>
     </div>
 
 </div>
@@ -251,35 +251,8 @@
         border-radius: 12px;
     }
 
-    /* Títol del menú principal */
-    .titol-dash {
-        font-size: 2.6rem;
-        font-weight: 800;
-        letter-spacing: 1px;
-        padding: 6px 0;
-        border-bottom: 4px solid rgba(13, 110, 253, 0.4);
-        display: inline-block;
-        animation: dashFade 0.6s ease-out forwards;
-    }
-
-    @keyframes dashFade {
-        from {
-            opacity: 0;
-            transform: translateY(18px);
-        }
-
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-
     /* Adaptació a pantalles petites */
     @media (max-width: 576px) {
-        .titol-dash {
-            font-size: 2rem;
-        }
-
         .list-card {
             padding-top: 42px;
         }
@@ -291,7 +264,6 @@
             gap: 8px;
         }
 
-        /* Botons grans, només amb icones */
         .action-btn {
             width: 44px;
             height: 44px;
@@ -307,7 +279,6 @@
             margin: 0 !important;
         }
 
-        /* Amagar el text dels botons en mòbil */
         .action-label {
             display: none;
         }
@@ -321,44 +292,64 @@
             padding: 0.75rem 0.75rem 1rem;
         }
     }
-
-    /* Accessibilitat: respectar la preferència de menys moviment */
-    @media (prefers-reduced-motion: reduce) {
-        .list-card,
-        .action-btn,
-        .titol-dash {
-            animation: none;
-            transition: none;
-        }
-    }
 </style>
 
 <script>
-const btnCrear = document.getElementById('btnCrear');
+document.addEventListener('DOMContentLoaded', () => {
+    const cercador = document.getElementById('cercadorLlistes');
+    const btnCrear = document.getElementById('btnCrear');
+    const itemsLlista = document.querySelectorAll('.llista-item');
+    const missatgeSenseResultats = document.getElementById('senseResultats');
 
-btnCrear.addEventListener('click', async () => {
-    const url = btnCrear.dataset.url;
-    const token = btnCrear.dataset.token;
+    // ---------- 1. FILTRE EN TEMPS REAL (CERCA) ----------
+    cercador.addEventListener('input', (e) => {
+        const text = e.target.value.toLowerCase().trim();
+        let comptadorVisibles = 0;
 
-    let valor = '';
-    let missatge = 'Nom de la nova llista:';
+        itemsLlista.forEach(item => {
+            const nomLlista = item.dataset.nom;
+            if (nomLlista.includes(text)) {
+                item.style.display = 'block';
+                comptadorVisibles++;
+            } else {
+                item.style.display = 'none';
+            }
+        });
 
-    while (true) {
-        const resposta = prompt(missatge, valor);
-
-        // Cancel·lar: no fem res, ens quedem a l'index
-        if (resposta === null) return;
-
-        valor = resposta.trim();
-
-        if (valor === '') {
-            missatge = 'El nom no pot estar buit.\n\nNom de la nova llista:';
-            continue;
+        // Mostrar o amagar avís de cap resultat
+        if (comptadorVisibles === 0 && itemsLlista.length > 0) {
+            missatgeSenseResultats.classList.remove('d-none');
+        } else {
+            missatgeSenseResultats.classList.add('d-none');
         }
-        if (valor.length > 255) {
-            missatge = 'El nom és massa llarg (màxim 255 caràcters).\n\nNom de la nova llista:';
-            continue;
+    });
+
+    // Permetre prémer "Enter" a l'input per crear directament
+    cercador.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            btnCrear.click();
         }
+    });
+
+    // ---------- 2. CREAR LLISTA DES DE LA BARRA ----------
+    btnCrear.addEventListener('click', async () => {
+        const nomLlista = cercador.value.trim();
+        const url = btnCrear.dataset.url;
+        const token = btnCrear.dataset.token;
+
+        if (nomLlista === '') {
+            alert('Si us plau, introdueix un nom per a la nova llista a la barra de cerca.');
+            cercador.focus();
+            return;
+        }
+
+        if (nomLlista.length > 255) {
+            alert('El nom és massa llarg (màxim 255 caràcters).');
+            return;
+        }
+
+        btnCrear.disabled = true;
 
         try {
             const res = await fetch(url, {
@@ -368,8 +359,9 @@ btnCrear.addEventListener('click', async () => {
                     'Accept': 'application/json',
                     'X-CSRF-TOKEN': token
                 },
-                body: JSON.stringify({ nom: valor })
+                body: JSON.stringify({ nom: nomLlista })
             });
+
             const data = await res.json();
 
             if (res.ok) {
@@ -378,16 +370,18 @@ btnCrear.addEventListener('click', async () => {
             }
 
             if (res.status === 422) {
-                missatge = (data.errors?.nom?.[0] ?? 'Nom no vàlid.') + '\n\nNom de la nova llista:';
-                continue;
+                const errorMsg = data.errors?.nom?.[0] ?? 'Nom no vàlid.';
+                alert(errorMsg);
+                btnCrear.disabled = false;
+                return;
             }
 
             throw new Error();
         } catch {
             alert('No s\'ha pogut crear la llista. Torna-ho a provar.');
-            return;
+            btnCrear.disabled = false;
         }
-    }
+    });
 });
 </script>
 
