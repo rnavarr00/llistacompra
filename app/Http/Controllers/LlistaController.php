@@ -2,23 +2,23 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Categoria;
 use App\Models\Llista;
+use App\Models\Producte;
 use App\Models\User;
+use App\Support\ColorLlista;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Foundation\Validation\ValidatesRequests;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
-use App\Support\ColorLlista;
 
 class LlistaController extends Controller
 {
     use AuthorizesRequests, ValidatesRequests;
 
     /**
-     * Mètode de suport: Obté les llistes creades per l'usuari actual (Owner).
-     * @param User $user
-     * @return \Illuminate\Database\Eloquent\Collection
+     * Llistes creades per l'usuari actual (owner).
      */
     private function llistesPropies(User $user)
     {
@@ -42,18 +42,15 @@ class LlistaController extends Controller
     {
         $user = Auth::user();
 
-        $llistes_propies = $this->llistesPropies($user);
-        $llistes_compartides = $this->llistesCompartides($user);
-
-        $llistes = $llistes_propies
-            ->merge($llistes_compartides)
+        $llistes = $this->llistesPropies($user)
+            ->merge($this->llistesCompartides($user))
             ->sortByDesc('created_at');
 
         return view('llistes.index', compact('llistes'));
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Crea una llista nova (només nom i, opcionalment, color). Respon JSON.
      */
     public function store(Request $request)
     {
@@ -76,13 +73,11 @@ class LlistaController extends Controller
             ]
         );
 
-        $llista = Llista::create(
-            [
-                'nom'       => trim($validated['nom']),
-                'usuari_id' => Auth::id(),
-                'color'     => $validated['color'] ?? null,
-            ]
-        );
+        $llista = Llista::create([
+            'nom'       => trim($validated['nom']),
+            'usuari_id' => Auth::id(),
+            'color'     => $validated['color'] ?? null,
+        ]);
 
         return response()->json(
             ['redirect' => route('llistes.show', $llista->id)],
@@ -90,9 +85,6 @@ class LlistaController extends Controller
         );
     }
 
-    /**
-     * Display the specified resource.
-     */
     public function show(string $id)
     {
         $llista = Llista::findOrFail($id);
@@ -101,21 +93,18 @@ class LlistaController extends Controller
         return view('llistes.list', $this->dadesVista($llista));
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
+    // Es manté perquè no es trenquin enllaços antics: l'edició es fa a show.
     public function edit(string $id)
     {
         return redirect()->route('llistes.show', $id);
     }
 
     /**
-     * Update the specified resource in storage.
+     * Canvi de nom (AJAX).
      */
-    public function update(Request $request, string $id)
+    public function actualitzarNom(Request $request, string $id)
     {
         $llista = Llista::findOrFail($id);
-
         $this->authorize('update', $llista);
 
         $validated = $request->validate(
@@ -126,36 +115,22 @@ class LlistaController extends Controller
                         ->where('usuari_id', $llista->usuari_id)
                         ->ignore($llista->id),
                 ],
-                'color' => [
-                    'nullable',
-                    'string',
-                    Rule::in(array_keys(ColorLlista::PALETA)),
-                ],
-                'productes' => 'nullable|array',
-                'productes.*.id' => 'required|exists:productes,id',
-                'productes.*.quantitat' => 'required|integer|min:1|max:100',
             ],
             [
                 'nom.required' => 'Has d’introduir un nom per a la llista.',
-                'nom.unique' => 'El propietari ja té una llista amb aquest nom.',
-                'productes.*.quantitat.max' => 'La quantitat màxima permesa és de 100 unitats.',
+                'nom.unique'   => 'El propietari ja té una llista amb aquest nom.',
+                'nom.max'      => 'El nom no pot passar de 255 caràcters.',
             ]
         );
 
-        $llista->update([
-            'nom'   => $validated['nom'],
-            'color' => $validated['color'] ?? null,
-        ]);
+        $llista->update(['nom' => trim($validated['nom'])]);
 
-        $llista->productes()->sync(
-            $this->productesPerSync(
-                $validated['productes'] ?? []
-            )
-        );
-
-        return redirect()->route('llistes.show', $llista->id)
-            ->with('success', 'Llista actualitzada correctament.');
+        return response()->json(['nom' => $llista->nom]);
     }
+
+    /**
+     * Canvi de color (AJAX).
+     */
     public function actualitzarColor(Request $request, string $id)
     {
         $llista = Llista::findOrFail($id);
@@ -170,6 +145,72 @@ class LlistaController extends Controller
         return response()->json(['ok' => true]);
     }
 
+    /**
+     * Afegeix un producte a la llista (AJAX). Retorna les dades per pintar la fila.
+     */
+    public function afegirProducte(Request $request, string $id)
+    {
+        $llista = Llista::findOrFail($id);
+        $this->authorize('update', $llista);
+
+        $validated = $request->validate([
+            'producte_id' => 'required|exists:productes,id',
+            'quantitat'   => 'required|integer|min:1|max:100',
+        ]);
+
+        if ($llista->productes()->where('productes.id', $validated['producte_id'])->exists()) {
+            return response()->json(['message' => 'Aquest producte ja és a la llista.'], 422);
+        }
+
+        $llista->productes()->attach($validated['producte_id'], [
+            'quantitat' => $validated['quantitat'],
+            'comprat'   => false,
+        ]);
+
+        $producte = Producte::with('categoria')->findOrFail($validated['producte_id']);
+        $nomCategoria = $producte->categoria->nom ?? 'Sense categoria';
+
+        return response()->json([
+            'id'            => $producte->id,
+            'nom'           => $producte->nom,
+            'categoria'     => $nomCategoria,
+            'icona'         => Categoria::imatgeCategoria($nomCategoria),
+            'quantitat'     => (int) $validated['quantitat'],
+            'toggle_url'    => route('productes.toggle', [
+                'llista_id' => $llista->id, 'producte_id' => $producte->id,
+            ]),
+            'delete_url'    => route('llistes.productes.eliminar', [
+                'llista_id' => $llista->id, 'producte_id' => $producte->id,
+            ]),
+            'quantitat_url' => route('llistes.productes.quantitat', [
+                'llista_id' => $llista->id, 'producte_id' => $producte->id,
+            ]),
+        ]);
+    }
+
+    /**
+     * Canvi de quantitat d'un producte (AJAX).
+     */
+    public function actualitzarQuantitat(Request $request, string $llista_id, string $producte_id)
+    {
+        $llista = Llista::findOrFail($llista_id);
+        $this->authorize('update', $llista);
+
+        $validated = $request->validate(
+            ['quantitat' => 'required|integer|min:1|max:100'],
+            ['quantitat.max' => 'La quantitat màxima permesa és de 100 unitats.']
+        );
+
+        $llista->productes()->updateExistingPivot($producte_id, [
+            'quantitat' => $validated['quantitat'],
+        ]);
+
+        return response()->json(['quantitat' => (int) $validated['quantitat']]);
+    }
+
+    /**
+     * Treu un producte de la llista (AJAX). No l'esborra de la taula productes.
+     */
     public function eliminarProducte(string $llista_id, string $producte_id)
     {
         $llista = Llista::findOrFail($llista_id);
@@ -181,14 +222,12 @@ class LlistaController extends Controller
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Eliminar una llista.
      */
-
-    // Eliminar una lista
     public function destroy(string $id)
     {
         $llista = Llista::findOrFail($id);
-        // Si l'usuari no és l'owner (que és qui la Policy permet), Laravel llançarà un 403 Forbidden.
+        // Si l'usuari no és l'owner, la Policy llança un 403.
         $this->authorize('delete', $llista);
 
         $llista->delete();
@@ -197,22 +236,19 @@ class LlistaController extends Controller
     }
 
     /**
-     * Mostra el formulari per gestionar els permisos de compartició d'una llista.
+     * Formulari per gestionar els permisos de compartició.
      */
     public function share(string $id)
     {
         $llista = Llista::findOrFail($id);
-        // Permet l'accés només a l'Owner i Admin.
         $this->authorize('share', $llista);
-        // Carreguem els usuaris que comparteixen aquesta llista (inclòs el camp pivot 'rol').
-        // També carreguem l'owner (usuari_id) per a la vista.
-        $llista->load('usuaris'); // 'usuaris' és la relació inversa a llistesCompartides
+        $llista->load('usuaris');
 
         return view('llistes.share', compact('llista'));
     }
 
     /**
-     * Processa la lògica d'afegir, modificar o eliminar permisos de compartició.
+     * Afegeix, modifica o elimina permisos de compartició.
      */
     public function processShare(Request $request, string $id)
     {
@@ -221,10 +257,7 @@ class LlistaController extends Controller
         $this->authorize('share', $llista);
 
         $validated = $request->validate([
-            // Pot ser un array buit si s'eliminen tots els usuaris
             'usuaris' => 'nullable|array',
-
-            // Cada element de l'array 'usuaris' ha de ser un ID vàlid d'usuari que no sigui l'Owner, amb un rol vàlid.
             'usuaris.*.id' => 'required|exists:users,id|not_in:' . $llista->usuari_id,
             'usuaris.*.rol' => 'required|in:viewer,editor,admin',
         ]);
@@ -232,15 +265,12 @@ class LlistaController extends Controller
         $syncData = [];
         if (!empty($validated['usuaris'])) {
             foreach ($validated['usuaris'] as $userEntry) {
-                // Clau: ID de l'usuari; Valor: Dades de la taula pivot
                 $syncData[$userEntry['id']] = [
                     'rol' => $userEntry['rol']
                 ];
             }
         }
-        // Si un usuari compartit ja hi és, actualitza el seu rol.
-        // Si hi ha un usuari nou a $syncData, l'afegeix.
-        // Si un usuari compartit existia però no és a $syncData, l'ELIMINA.
+        // Actualitza rols, afegeix usuaris nous i ELIMINA els que ja no hi són.
         $llista->usuaris()->sync($syncData);
 
         return redirect()->route('llistes.show', $llista->id)
@@ -248,8 +278,7 @@ class LlistaController extends Controller
     }
 
     /**
-     * Cerca usuaris per nom o correu electrònic (AJAX/JSON).
-     * Exclou l'usuari autenticat.
+     * Cerca usuaris per nom o correu (JSON). Exclou l'usuari autenticat.
      */
     public function searchUsers(Request $request)
     {
@@ -258,27 +287,25 @@ class LlistaController extends Controller
         if (!$searchTerm) {
             return response()->json([]);
         }
-        // Excloure l'usuari actual
-        $currentUserId = Auth::id();
 
         $usuaris = User::where(function ($query) use ($searchTerm) {
             $query->where('name', 'LIKE', "%{$searchTerm}%")
                 ->orWhere('email', 'LIKE', "%{$searchTerm}%");
         })
-            ->where('id', '!=', $currentUserId)
+            ->where('id', '!=', Auth::id())
             ->select('id', 'name', 'email')
             ->limit(10)
             ->get();
 
-        // Retornar en format json
         return response()->json($usuaris);
     }
 
+    /**
+     * Prepara les dades de la vista de la llista.
+     */
     private function dadesVista(Llista $llista): array
     {
-        $productes = $llista->exists
-            ? $llista->load('productes.categoria')->productes
-            : collect();
+        $productes = $llista->load('productes.categoria')->productes;
 
         $perCategoria = $productes->groupBy(
             fn ($producte) => $producte->categoria->nom ?? 'Sense categoria'
@@ -298,14 +325,5 @@ class LlistaController extends Controller
             'hasTwoColumns',
             'colors'
         );
-    }
-
-    private function productesPerSync(array $productes): array
-    {
-        $syncData = [];
-        foreach ($productes as $producte) {
-            $syncData[$producte['id']] = ['quantitat' => $producte['quantitat']];
-        }
-        return $syncData;
     }
 }
