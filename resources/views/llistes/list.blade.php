@@ -57,7 +57,7 @@
 
                 @foreach ($colors as $hex => $nombre)
                     <label class="opcio-color">
-                        <input type="radio" name="color" value="{{ hex }}"
+                        <input type="radio" name="color" value="{{ $hex }}"
                             {{ old('color', $llista->color ?? '') === $hex ? 'checked' : '' }}>
                         <span class="mostra-color" style="background-color: {{ $hex }};" title="{{ $nombre }}"></span>
                         <span class="nombre-color">{{ $nombre }}</span>
@@ -615,3 +615,4 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 </script>
+@endsection
