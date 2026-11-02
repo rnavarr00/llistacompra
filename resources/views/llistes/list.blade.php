@@ -50,28 +50,23 @@
         {{-- Selector de color de la llista --}}
         @if ($potEditar)
             <div class="mb-4">
-                <label class="form-label fw-semibold">
-                    <i class="bi bi-palette me-2"></i>Color de la llista
-                </label>
-
                 <div class="selector-colors">
                     {{-- Sense color --}}
-                    <label class="opcion-color">
+                    <label class="opcio-color">
                         <input
                             type="radio"
                             name="color"
                             value=""
                             {{ old('color', $llista->color ?? '') == '' ? 'checked' : '' }}
                         >
-                        <span class="muestra-color sin-color" title="Sense color">
+                        <span class="mostra-color sin-color" title="Sense color">
                             <i class="bi bi-slash-circle"></i>
                         </span>
-                        <span class="nombre-color">Sense color</span>
                     </label>
 
                     {{-- Colors de la paleta --}}
                     @foreach ($colors as $hex => $nombre)
-                        <label class="opcion-color">
+                        <label class="opcio-color">
                             <input
                                 type="radio"
                                 name="color"
@@ -79,11 +74,10 @@
                                 {{ old('color', $llista->color ?? '') === $hex ? 'checked' : '' }}
                             >
                             <span
-                                class="muestra-color"
+                                class="mostra-color"
                                 style="background-color: {{ $hex }};"
                                 title="{{ $nombre }}"
                             ></span>
-                            <span class="nombre-color">{{ $nombre }}</span>
                         </label>
                     @endforeach
                 </div>
@@ -126,6 +120,15 @@
         {{-- Productes existents, per categories --}}
         <div class="card shadow-sm border-0">
             <div class="card-body p-4">
+                @if (count($columna1))
+                    <div class="d-flex justify-content-end mb-2">
+                        <button type="button" id="toggle-tots"
+                                class="btn btn-outline-primary btn-sm px-2 py-1">
+                            <i class="bi bi-check2-all me-1"></i>
+                            <span>Marcar tots</span>
+                        </button>
+                    </div>
+                @endif
 
                 @if (count($columna1))
                 <div class="row g-4">
@@ -196,7 +199,11 @@
 </div>
 
 <style>
-    .comprat .nom, .comprat .quantitat { text-decoration: line-through; color: #6c757d !important; }
+    .comprat .nom,
+    .comprat .quantitat {
+        text-decoration: line-through;
+        color: #6c757d !important;
+    }
 
     /* Selector de color de la llista */
     .selector-colors {
@@ -206,7 +213,7 @@
         margin-top: 10px;
     }
 
-    .opcion-color {
+    .opcio-color {
         display: flex;
         flex-direction: column;
         align-items: center;
@@ -215,15 +222,16 @@
         font-size: 0.85rem;
     }
 
-    .opcion-color input[type="radio"] {
+    .opcio-color input[type="radio"] {
         position: absolute;
         opacity: 0;
         pointer-events: none;
     }
 
-    .muestra-color {
+    .mostra-color {
         width: 36px;
         height: 36px;
+        flex-shrink: 0;
         border-radius: 50%;
         border: 2px solid rgba(0, 0, 0, 0.12);
         display: flex;
@@ -238,19 +246,53 @@
         border: 2px dashed #adb5bd;
     }
 
-    .opcion-color input:checked + .muestra-color {
+    .opcio-color input:checked + .mostra-color {
         outline: 3px solid #212529;
         outline-offset: 3px;
         transform: scale(1.05);
     }
 
-    .opcion-color input:focus-visible + .muestra-color {
+    .opcio-color input:focus-visible + .mostra-color {
         outline: 3px solid #0d6efd;
         outline-offset: 4px;
     }
 
     .nombre-color {
         color: #495057;
+    }
+
+    /* Adaptación para pantallas pequeñas */
+    @media (max-width: 576px) {
+        .selector-colors {
+            display: grid;
+            grid-template-columns: repeat(9, minmax(0, 1fr));
+            gap: 4px;
+            width: 100%;
+        }
+
+        .opcio-color {
+            min-width: 0;
+            width: 100%;
+            gap: 4px;
+            font-size: 0.65rem;
+            text-align: center;
+        }
+
+        .mostra-color {
+            width: clamp(20px, 6vw, 32px);
+            height: clamp(20px, 6vw, 32px);
+        }
+
+        .opcio-color input:checked + .mostra-color {
+            outline-offset: 2px;
+        }
+
+        .nombre-color {
+            font-size: 9px;
+            line-height: 1.1;
+            overflow-wrap: anywhere;
+            text-align: center;
+        }
     }
 
     @media (prefers-reduced-motion: reduce) {
@@ -266,27 +308,117 @@ document.addEventListener('DOMContentLoaded', () => {
               || document.querySelector('#llistaForm input[name="_token"]').value;
 
     // ---------- Marcar com a comprat (AJAX) ----------
-    document.addEventListener('change', async (e) => {
-        if (!e.target.classList.contains('toggle-comprat')) return;
-        const checkbox = e.target;
+    // ---------- Marcar i desmarcar productes (AJAX) ----------
+
+    // Guarda el estado de un producto en el servidor
+    async function guardarEstatComprat(checkbox, nouEstat, estatAnterior) {
         const row = checkbox.closest('.producte-row');
-        row.classList.toggle('comprat', checkbox.checked);
+
+        checkbox.checked = nouEstat;
+        row.classList.toggle('comprat', nouEstat);
 
         try {
             const body = new FormData();
             body.append('_method', 'PATCH');
             body.append('_token', csrf);
+
             const res = await fetch(checkbox.dataset.url, {
-                method: 'POST', body, headers: { 'Accept': 'application/json' }
+                method: 'POST',
+                body,
+                headers: { 'Accept': 'application/json' }
             });
+
             if (!res.ok) throw new Error();
+
+            return true;
+
         } catch {
-            // Si falla, desfem el canvi visual
-            checkbox.checked = !checkbox.checked;
-            row.classList.toggle('comprat', checkbox.checked);
+            // Si falla, recuperamos el estado anterior
+            checkbox.checked = estatAnterior;
+            row.classList.toggle('comprat', estatAnterior);
+
+            return false;
+        }
+    }
+
+    // Actualiza el texto del botón según el estado de los productos
+    function actualitzarTextTots() {
+        const boton = document.getElementById('toggle-tots');
+        if (!boton) return;
+
+        const checkboxes = [...document.querySelectorAll('.toggle-comprat')];
+
+        const totsComprats = checkboxes.length > 0 &&
+            checkboxes.every(checkbox => checkbox.checked);
+
+        boton.querySelector('span').textContent = totsComprats
+            ? 'Desmarcar tots'
+            : 'Marcar tot';
+    }
+
+    // Cambio individual de un producto
+    document.addEventListener('change', async (e) => {
+        if (!e.target.classList.contains('toggle-comprat')) return;
+
+        const checkbox = e.target;
+        const nouEstat = checkbox.checked;
+        const estatAnterior = !nouEstat;
+
+        const correcto = await guardarEstatComprat(
+            checkbox,
+            nouEstat,
+            estatAnterior
+        );
+
+        if (!correcto) {
             alert('No s\'ha pogut actualitzar el producte.');
         }
+
+        actualitzarTextTots();
     });
+
+    // Marcar o desmarcar todos los productos
+    const botoTots = document.getElementById('toggle-tots');
+
+    if (botoTots) {
+        actualitzarTextTots();
+
+        botoTots.addEventListener('click', async () => {
+            const checkboxes = [...document.querySelectorAll('.toggle-comprat')];
+
+            if (!checkboxes.length) return;
+
+            // Si hay alguno sin comprar, marcamos todos.
+            // Si todos están comprados, los desmarcamos.
+            const nouEstat = checkboxes.some(checkbox => !checkbox.checked);
+
+            botoTots.disabled = true;
+
+            // Evitamos cambios individuales mientras se actualiza todo.
+            checkboxes.forEach(checkbox => checkbox.disabled = true);
+
+            const resultats = await Promise.all(
+                checkboxes
+                    .filter(checkbox => checkbox.checked !== nouEstat)
+                    .map(checkbox =>
+                        guardarEstatComprat(
+                            checkbox,
+                            nouEstat,
+                            checkbox.checked
+                        )
+                    )
+            );
+
+            checkboxes.forEach(checkbox => checkbox.disabled = false);
+            botoTots.disabled = false;
+
+            actualitzarTextTots();
+
+            if (resultats.some(resultat => !resultat)) {
+                alert('Alguns productes no s\'han pogut actualitzar.');
+            }
+        });
+    }
 
     // ---------- Canvi de color (AJAX) ----------
     const radiosColor = document.querySelectorAll('input[name="color"]');
