@@ -144,30 +144,63 @@ class LlistaController extends Controller
 
         return response()->json(['ok' => true]);
     }
-
     /**
-     * Afegeix un producte a la llista (AJAX). Retorna les dades per pintar la fila.
+     * Afegeix un producte a la llista (AJAX).
+     * Accepta un producte existent (producte_id) o un nom nou (nom).
+     * Retorna les dades per pintar la fila.
      */
     public function afegirProducte(Request $request, string $id)
     {
         $llista = Llista::findOrFail($id);
         $this->authorize('update', $llista);
 
-        $validated = $request->validate([
-            'producte_id' => 'required|exists:productes,id',
-            'quantitat'   => 'required|integer|min:1|max:100',
-        ]);
+        $validated = $request->validate(
+            [
+                'producte_id' => 'nullable|required_without:nom|exists:productes,id',
+                'nom'         => 'nullable|required_without:producte_id|string|max:255',
+                'quantitat'   => 'required|integer|min:1|max:100',
+            ],
+            [
+                'producte_id.required_without' => 'Has de seleccionar un producte.',
+                'nom.max' => 'El nom del producte no pot passar de 255 caràcters.',
+            ]
+        );
 
-        if ($llista->productes()->where('productes.id', $validated['producte_id'])->exists()) {
+        if (!empty($validated['producte_id'])) {
+            // Producte existent
+            $producte = Producte::findOrFail($validated['producte_id']);
+        } else {
+            // Nom nou: netegem espais repetits
+            $nom = trim(preg_replace('/\s+/', ' ', $validated['nom']));
+
+            if ($nom === '') {
+                return response()->json(['message' => 'El nom del producte no pot estar buit.'], 422);
+            }
+
+            // Si ja existeix (sense distingir majúscules ni accents), el reutilitzem
+            $nomNormalitzat = Producte::normalitzar($nom);
+            $producte = Producte::get(['id', 'nom', 'categoria_id'])
+                ->first(fn ($p) => Producte::normalitzar($p->nom) === $nomNormalitzat);
+
+            // Si no existeix, el creem a la categoria 1 (Sense Categoria)
+            if (!$producte) {
+                $producte = Producte::create([
+                    'nom'          => $nom,
+                    'categoria_id' => 1,
+                ]);
+            }
+        }
+
+        if ($llista->productes()->where('productes.id', $producte->id)->exists()) {
             return response()->json(['message' => 'Aquest producte ja és a la llista.'], 422);
         }
 
-        $llista->productes()->attach($validated['producte_id'], [
+        $llista->productes()->attach($producte->id, [
             'quantitat' => $validated['quantitat'],
             'comprat'   => false,
         ]);
 
-        $producte = Producte::with('categoria')->findOrFail($validated['producte_id']);
+        $producte->load('categoria');
         $nomCategoria = $producte->categoria->nom ?? 'Sense categoria';
 
         return response()->json([

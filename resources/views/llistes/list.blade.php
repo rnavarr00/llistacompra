@@ -508,6 +508,9 @@ document.addEventListener('DOMContentLoaded', () => {
             fetch(`${searchUrl}?q=${encodeURIComponent(query)}`)
                 .then(res => res.json())
                 .then(data => {
+                    // Si mentrestant l'usuari ha seguit escrivint, ignorem aquesta resposta
+                    if (cercador.value.trim() !== query) return;
+
                     suggestions.innerHTML = '';
                     data.forEach(product => {
                         const item = document.createElement('button');
@@ -545,18 +548,21 @@ document.addEventListener('DOMContentLoaded', () => {
             alert('Indica una quantitat vàlida (1-100).');
             return;
         }
-        if (!id || !nom) {
-            alert('Has de seleccionar un producte dels suggeriments.');
+        if (!nom) {
+            alert('Escriu el nom d\'un producte.');
             return;
         }
-        if (afegits.has(id)) {
+        if (id && afegits.has(id)) {
             alert('Aquest producte ja és a la llista.');
             return;
         }
 
+        // Si s'ha triat un suggeriment, enviem l'id; si no, el nom escrit
+        const payload = id ? { producte_id: id, quantitat } : { nom, quantitat };
+
         btnAfegir.disabled = true;
         try {
-            const data = await api(contenidor.dataset.addUrl, 'POST', { producte_id: id, quantitat });
+            const data = await api(contenidor.dataset.addUrl, 'POST', payload);
             afegits.add(String(data.id));
             pintaFila(data);
         } catch (err) {
@@ -568,6 +574,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         cercador.value = '';
         hiddenId.value = '';
+        suggestions.innerHTML = '';
         qtyNou.value = 1;
         cercador.focus();
     });
